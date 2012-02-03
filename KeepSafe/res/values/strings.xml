@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">KeepSafe</string>
+
+    <string name="pleasewait">Please wait</string>
+    
+    <string name="store">Store secret</string>
+    <string name="get">Get secret</string>
+    <string name="hide">Hide secret</string>
+    <string name="add">Add a secret</string>
+    <string name="delete">Delete</string>
+    
+    <string name="addsecretname">Enter name</string>
+    <string name="addsecretvalue">Enter secret</string>
+    <string name="enterpassword">Enter password</string>
+    
+    <string name="failed">Failed. Please restart.</string>
+    <string name="restart">Restart</string>
+    
+</resources>
