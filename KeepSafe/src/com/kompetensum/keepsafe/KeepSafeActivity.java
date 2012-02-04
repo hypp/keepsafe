@@ -169,7 +169,6 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		case STATE_DECRYPTING:
 		case STATE_STORE_SECRET:
 			// Show progressbar
-			// TODO Use ProgressDialog
 			runOnUiThread(new Runnable() {
 				public void run() {
 					progress = ProgressDialog.show(context, getString(R.string.pleasewait), getString(R.string.processing));
@@ -208,7 +207,6 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			
 			break;
 		case STATE_SHOW_SECRET:
-			// Enter password for decrypt
 			runOnUiThread(new Runnable() {
 				public void run() {
 					View view = findViewById(R.id.showsecretLayout);
