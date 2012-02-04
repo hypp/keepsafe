@@ -18,12 +18,7 @@
 
 package com.kompetensum.keepsafe;
 
-import java.security.Provider;
 import java.security.SecureRandom;
-import java.security.Security;
-import java.util.ArrayList;
-import java.util.Set;
-
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -33,6 +28,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -40,26 +36,31 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class KeepSafeActivity extends Activity implements OnClickListener, OnItemClickListener, OnItemLongClickListener {
 	private SQLiteDatabase database;
 	private Context context;
 	
+	private ProgressDialog progress;
+	
 	// Crypto constants
 	static final int KEY_LENGTH = 256;
 	static final int ITERATION_COUNT = 1000;
 	static final int SALT_LENGTH = 60;
-	
+	static final String PRNG = "SHA1PRNG";
+	static final String KDF = "PBKDF2WithHmacSHA1";
+	static final String CIPHER = "AES/CBC/PKCS5Padding";
+	static final String KEYTYPE = "AES";
+
 	// Keep track of internal state
 	static final int STATE_INIT = 0;
 	static final int STATE_INIT_DB_DONE = 10;
@@ -70,9 +71,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	static final int STATE_STORE_SECRET = 60;
 	static final int STATE_SHOW_SECRET = 70;
 	static final int STATE_ENTER_PASSWORD = 80;
+	static final int STATE_DELETE_SECRET = 90;
 	
 	static final int STATE_FAILED_DECRYPT = 110;
 	static final int STATE_FAILED_STORE = 120;
+	static final int STATE_FAILED_ALGORITHMS = 130;
 	
 	private int state = STATE_INIT;
 	
@@ -101,24 +104,25 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
         lv.setOnItemClickListener(this);
         lv.setOnItemLongClickListener(this);
         
-        Provider[] providers = Security.getProviders();
-        for (Provider provider : providers) {
-            Log.i("CRYPTO","provider: "+provider.getName());
-            Set<Provider.Service> services = provider.getServices();
-            for (Provider.Service service : services) {
-                Log.i("CRYPTO","  algorithm: "+service.getAlgorithm());
-            }
-        }        
-        
         // Open the database
         new Thread(new Runnable() {
             public void run() {
             	SecretStorage ss = new SecretStorage(context);
             	database = ss.getWritableDatabase();
             	setState(STATE_INIT_DB_DONE);
+
+            	// Sanity checks!
+            	try
+            	{
+		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
+		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
+					Cipher cipher = Cipher.getInstance(CIPHER);
+
+	            	setState(STATE_LIST_SECRETS);
+            	} catch (Exception e) {
+                	setState(STATE_FAILED_ALGORITHMS);
+            	}
             	
-            	
-            	setState(STATE_LIST_SECRETS);
             }
           }).start();
     }
@@ -134,15 +138,13 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	 * @param state the state to set
 	 */
 	public void setState(int state) {
-		// TODO rewrite this
+		
 		this.state = state;
 
 		// Hide all
 		runOnUiThread(new Runnable() {
 			public void run() {
-				View view = findViewById(R.id.progressLayout);
-				view.setVisibility(View.INVISIBLE);
-				view = findViewById(R.id.showsecretLayout);
+				View view = findViewById(R.id.showsecretLayout);
 				view.setVisibility(View.INVISIBLE);
 				view = findViewById(R.id.listsecretsLayout);
 				view.setVisibility(View.INVISIBLE);
@@ -153,6 +155,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				
 				view = findViewById(R.id.failedLayout);
 				view.setVisibility(View.INVISIBLE);
+				
+				if (progress != null)
+				{
+					progress.dismiss();
+				}
 			}
 		});
 		
@@ -165,8 +172,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			// TODO Use ProgressDialog
 			runOnUiThread(new Runnable() {
 				public void run() {
-					View view = findViewById(R.id.progressLayout);
-					view.setVisibility(View.VISIBLE);
+					progress = ProgressDialog.show(context, getString(R.string.pleasewait), getString(R.string.processing));
 				}
 			});
 			break;
@@ -211,6 +217,21 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			});
 			
 			break;
+			
+		case STATE_FAILED_ALGORITHMS:
+			runOnUiThread(new Runnable() {
+				public void run() {
+					AlertDialog ad = new AlertDialog.Builder(context).create();  
+					ad.setCancelable(false); // This blocks the 'BACK' button  
+					ad.setMessage(getString(R.string.notsupported));
+					ad.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.ok), new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							dialog.dismiss();
+						}  
+					});  
+					ad.show();		
+				}
+			});
 		case STATE_FAILED_DECRYPT:
 		case STATE_FAILED_STORE:
 			// Show error message
@@ -230,26 +251,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		// Clear the list
 		list.setAdapter(null);
 		
-		ArrayList<String> keys = new ArrayList<String>();
+		String[] columns = new String[] {SecretStorage.COL_NAME};
+		int[] to = new int[] {R.id.textListItem};
+		Cursor cursor = database.rawQuery("select rowid _id, "+ SecretStorage.COL_NAME + " from " + SecretStorage.DATABASE_NAME,null);
 		
-		String[] columns = new String[1];
-		columns[0] = new String("name");
-		Cursor cursor = database.query("secret",columns,null,null,null, null, null);
-		if (!cursor.moveToFirst())
-		{
-			return;
-		}
-		do
-		{
-			ContentValues values = new ContentValues();
-			DatabaseUtils.cursorRowToContentValues(cursor, values);
-			keys.add(values.getAsString("name"));
-			
-			
-		} while (cursor.moveToNext());
-		
-		list.setAdapter(new ArrayAdapter<String>(context,R.layout.listview_content,R.id.textListItem,keys));
-		
+		list.setAdapter(new SimpleCursorAdapter(this, R.layout.listview_content, cursor, columns, to));
 		
 	}
 
@@ -303,10 +309,10 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				try {
 					String[] selection = new String[1];
 					selection[0] = name;
-					Cursor cursor = database.query("secret",null,"name = ?",selection,null, null, null);
+					Cursor cursor = database.query(SecretStorage.DATABASE_NAME,null,SecretStorage.COL_NAME + " = ?",selection,null, null, null);
 					if (!cursor.moveToFirst())
 					{
-						return;
+						throw new Exception("cursor.moveToFirst() failed");
 					}
 					
 					ContentValues values = new ContentValues();
@@ -314,27 +320,27 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 					int keyLength = KEY_LENGTH;
 					
-					byte[] salt = values.getAsByteArray("salt");
-					int iterationCount = values.getAsInteger("iterationcount");
-					byte[] iv = values.getAsByteArray("iv");
-					byte[] ciphertext = values.getAsByteArray("value");
+					byte[] salt = values.getAsByteArray(SecretStorage.COL_SALT);
+					int iterationCount = values.getAsInteger(SecretStorage.COL_ITERATION_COUNT);
+					byte[] iv = values.getAsByteArray(SecretStorage.COL_IV);
+					byte[] ciphertext = values.getAsByteArray(SecretStorage.COL_VALUE);
 					
 					if (salt.length != SALT_LENGTH)
 					{
-						int x = 42;
+						throw new Exception("salt.length != SALT_LENGTH");
 					}
 					if (iterationCount != ITERATION_COUNT)
 					{
-						int x = 42;
+						throw new Exception("iterationCount != ITERATION_COUNT");
 					}
 					
 		        	// Generate a secret key from the password	
-		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
 		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
 					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key = new SecretKeySpec(tmp.getEncoded(), "AES");
+					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
 					
-					Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+					Cipher cipher = Cipher.getInstance(CIPHER);
 					IvParameterSpec ivParams = new IvParameterSpec(iv);
 					cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
 					byte[] plaintext = cipher.doFinal(ciphertext);
@@ -369,31 +375,32 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					int saltLength = SALT_LENGTH;
 					
 					// Generate a random salt
-		        	SecureRandom prng = SecureRandom.getInstance("SHA1PRNG");
+		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
 		        	byte[] salt = new byte[saltLength];
 		        	prng.nextBytes(salt);
 		        	
 		        	// Generate a secret key from the password	
-		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
 		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
 					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key = new SecretKeySpec(tmp.getEncoded(), "AES");			
+					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);			
 						
 					// Encrypt the secret
-					Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+					Cipher cipher = Cipher.getInstance(CIPHER);
 					cipher.init(Cipher.ENCRYPT_MODE, key);
 					byte[] iv = cipher.getIV();
 					byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
 					
 					// Store it to the database
+					
 					ContentValues values = new ContentValues();
-					values.put("name",name);
-					values.put("salt",salt);
-					values.put("iterationcount",iterationCount);
-					values.put("iv",iv);
-					values.put("value",ciphertext);
+					values.put(SecretStorage.COL_NAME,name);
+					values.put(SecretStorage.COL_SALT,salt);
+					values.put(SecretStorage.COL_ITERATION_COUNT,iterationCount);
+					values.put(SecretStorage.COL_IV,iv);
+					values.put(SecretStorage.COL_VALUE,ciphertext);
 	
-					database.insert("secret", null, values);
+					database.insert(SecretStorage.DATABASE_NAME, null, values);
 					
 					// Return to unlocked state
 					setState(STATE_LIST_SECRETS);
@@ -409,7 +416,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		
-		String name = (String)parent.getItemAtPosition(position);
+		Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+		String name = cursor.getString(cursor.getColumnIndex(SecretStorage.COL_NAME));
 		TextView tv = (TextView)findViewById(R.id.name);
 		tv.setText(name);
 		
@@ -417,19 +425,28 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	}
 
 	public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-		String name = (String)parent.getItemAtPosition(position);
+		Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+		final String name = cursor.getString(cursor.getColumnIndex(SecretStorage.COL_NAME));
 		
 		// Show messagebox
 		AlertDialog ad = new AlertDialog.Builder(this).create();  
 		ad.setCancelable(false); // This blocks the 'BACK' button  
-		ad.setMessage("Delete '" + name + "'?");
-		ad.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
+		ad.setMessage(getString(R.string.delete) + " '" + name + "'?");
+		ad.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.yes), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
+				
+				setState(STATE_DELETE_SECRET);
+				
 				dialog.dismiss();
-				// TODO Delete from database and refresh listview
+				
+				String[] args = new String[1];
+				args[0] = name;
+				database.execSQL("delete from " + SecretStorage.DATABASE_NAME + " where " + SecretStorage.COL_NAME + " = ?", args);
+				
+				setState(STATE_LIST_SECRETS);
 			}  
 		});  
-		ad.setButton(AlertDialog.BUTTON_NEGATIVE, "No", new DialogInterface.OnClickListener() {
+		ad.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.no), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}  
@@ -439,3 +456,4 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		return true;
 	}
 }
+

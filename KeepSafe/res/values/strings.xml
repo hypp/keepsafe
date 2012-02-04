@@ -4,6 +4,7 @@
     <string name="app_name">KeepSafe</string>
 
     <string name="pleasewait">Please wait</string>
+    <string name="processing">Processing</string>
     
     <string name="store">Store secret</string>
     <string name="get">Get secret</string>
@@ -17,5 +18,10 @@
     
     <string name="failed">Failed. Please restart.</string>
     <string name="restart">Restart</string>
+    <string name="notsupported">The required algorithms are not supported on this device.</string>
+    
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="ok">Ok</string>
     
 </resources>
