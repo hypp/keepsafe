@@ -14,6 +14,7 @@
             android:id="@+id/buttonAddSecret"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/lock_add"
             android:text="@string/add" />
 
         <ListView
@@ -74,6 +75,7 @@
             android:id="@+id/buttonStoreSecret"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/lock_add"
             android:text="@string/store" />
 
     </LinearLayout>
@@ -86,6 +88,8 @@
 
         <TextView
             android:id="@+id/name"
+			android:textAppearance="?android:attr/textAppearanceLarge"            
+            android:drawableLeft="@drawable/lock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="" />
@@ -106,6 +110,7 @@
             android:id="@+id/buttonGetSecret"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/lock_open"
             android:text="@string/get" />
 
     </LinearLayout>
@@ -115,17 +120,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
-
+        
         <TextView
             android:id="@+id/showSecret"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="" />
-
+			android:textAppearance="?android:attr/textAppearanceLarge"            
+            android:drawableLeft="@drawable/lock_open"
+            android:text="" >
+            
+        </TextView>
+	        
         <Button
             android:id="@+id/buttonHideSecret"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/lock_go"
             android:text="@string/hide" />
 
     </LinearLayout>
@@ -140,6 +150,8 @@
             android:id="@+id/failed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/lock_break"
+			android:textAppearance="?android:attr/textAppearanceLarge"            
             android:text="@string/failed" />
 
         <Button
@@ -147,6 +159,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/restart" />
+
         </LinearLayout>
 
 </FrameLayout>

@@ -428,8 +428,10 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		final String name = cursor.getString(cursor.getColumnIndex(SecretStorage.COL_NAME));
 		
 		// Show messagebox
-		AlertDialog ad = new AlertDialog.Builder(this).create();  
+		AlertDialog ad = new AlertDialog.Builder(this).create();
 		ad.setCancelable(false); // This blocks the 'BACK' button  
+		ad.setTitle(getString(R.string.delete));
+		ad.setIcon(R.drawable.lock_delete);
 		ad.setMessage(getString(R.string.delete) + " '" + name + "'?");
 		ad.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.yes), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
@@ -449,7 +451,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}  
-		});  
+		});
 		ad.show();		
 		
 		return true;
