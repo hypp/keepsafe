@@ -120,6 +120,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 
 	            	setState(STATE_LIST_SECRETS);
             	} catch (Exception e) {
+            		// PBKDF2WithHmacSHA1 does not exist on SonyEricsson XPERIA X10 Mini API-level 7 
                 	setState(STATE_FAILED_ALGORITHMS);
             	}
             	
