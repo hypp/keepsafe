@@ -60,7 +60,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	static final String KDF = "PBKDF2WithHmacSHA1";
 	static final String CIPHER = "AES/CBC/PKCS5Padding";
 	static final String KEYTYPE = "AES";
-	static final int NONCE_LENGTH = 0;
+	static final int NONCE_LENGTH = 10;
 	
 	// Keep track of internal state
 	static final int STATE_INIT = 0;
