@@ -54,13 +54,14 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 	// Crypto constants
 	static final int KEY_LENGTH = 256;
-	static final int ITERATION_COUNT = 1000;
-	static final int SALT_LENGTH = 60;
+	static final int ITERATION_COUNT = 10000;
+	static final int SALT_LENGTH = 8;
 	static final String PRNG = "SHA1PRNG";
 	static final String KDF = "PBKDF2WithHmacSHA1";
 	static final String CIPHER = "AES/CBC/PKCS5Padding";
 	static final String KEYTYPE = "AES";
-
+	static final int NONCE_LENGTH = 0;
+	
 	// Keep track of internal state
 	static final int STATE_INIT = 0;
 	static final int STATE_INIT_DB_DONE = 10;
@@ -167,7 +168,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		switch (state)
 		{
 		case STATE_INIT:
+			// Fall through
 		case STATE_DECRYPTING:
+			// Fall through
 		case STATE_STORE_SECRET:
 			// Show progressbar
 			runOnUiThread(new Runnable() {
@@ -232,6 +235,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				}
 			});
 		case STATE_FAILED_DECRYPT:
+			// Fall through
 		case STATE_FAILED_STORE:
 			// Show error message
 			runOnUiThread(new Runnable() {
@@ -382,12 +386,19 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
 		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
 					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);			
-						
-					// Encrypt the secret
+					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
+					
+					// Generate IV
+					byte[] nonce = new byte[NONCE_LENGTH];
+					prng.nextBytes(nonce);
 					Cipher cipher = Cipher.getInstance(CIPHER);
 					cipher.init(Cipher.ENCRYPT_MODE, key);
-					byte[] iv = cipher.getIV();
+					byte[] iv = cipher.doFinal(nonce);
+						
+					// Encrypt the secret
+					cipher = Cipher.getInstance(CIPHER);
+					IvParameterSpec ivParams = new IvParameterSpec(iv);
+					cipher.init(Cipher.ENCRYPT_MODE, key, ivParams);
 					byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
 					
 					// Store it to the database
