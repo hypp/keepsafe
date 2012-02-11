@@ -33,10 +33,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -58,8 +60,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 	// Crypto constants
 	static final int KEY_LENGTH = 256;
-	static final int ITERATION_COUNT = 10000;
-	static final int SALT_LENGTH = 8;
+	static final int DEFAULT_ITERATION_COUNT = 10000;
+	static final int DEFAULT_SALT_LENGTH = 8;
 	static final String PRNG = "SHA1PRNG";
 	static final String KDF = "PBKDF2WithHmacSHA1";
 	static final String CIPHER = "AES/CBC/PKCS5Padding";
@@ -83,6 +85,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	static final int STATE_FAILED_ALGORITHMS = 130;
 	
 	private int state = STATE_INIT;
+	private int iteration_count = DEFAULT_ITERATION_COUNT;
+	private int salt_length = DEFAULT_SALT_LENGTH;
 	
     /** Called when the activity is first created. */
 	/* (non-Javadoc)
@@ -135,6 +139,29 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
             }
           }).start();
     }
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onStart()
+	 */
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		// Initialize preferences
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		String tmp = preferences.getString("iteration_count", "");
+		iteration_count = Integer.parseInt(tmp);
+		if (iteration_count == 0)
+		{
+			iteration_count = DEFAULT_ITERATION_COUNT;
+		}
+		tmp = preferences.getString("salt_length", "");
+		salt_length = Integer.parseInt(tmp);
+		if (salt_length == 0)
+		{
+			salt_length = DEFAULT_SALT_LENGTH;
+		}
+	}
 
 	/**
 	 * @return the state
@@ -348,15 +375,6 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					byte[] iv = values.getAsByteArray(SecretStorage.COL_IV);
 					byte[] ciphertext = values.getAsByteArray(SecretStorage.COL_VALUE);
 					
-					if (salt.length != SALT_LENGTH)
-					{
-						throw new Exception("salt.length != SALT_LENGTH");
-					}
-					if (iterationCount != ITERATION_COUNT)
-					{
-						throw new Exception("iterationCount != ITERATION_COUNT");
-					}
-					
 		        	// Generate a secret key from the password	
 		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
 		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
@@ -400,8 +418,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				
 				try {
 					int keyLength = KEY_LENGTH;
-					int iterationCount = ITERATION_COUNT;
-					int saltLength = SALT_LENGTH;
+					int iterationCount = iteration_count;
+					int saltLength = salt_length;
 					
 					// Generate a random salt
 		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
