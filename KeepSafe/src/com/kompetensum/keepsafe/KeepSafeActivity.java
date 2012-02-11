@@ -32,10 +32,14 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -81,6 +85,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	private int state = STATE_INIT;
 	
     /** Called when the activity is first created. */
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreate()
+	 */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,6 +144,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	}
 
 	/**
+	 * Set the current state and update GUI
 	 * @param state the state to set
 	 */
 	public void setState(int state) {
@@ -248,7 +256,10 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			break;
 		}
 	}
-
+	
+	/**
+	 * Refresh the ListView containing name of secrets
+	 */
 	protected void refreshSecretList() {
 		ListView list = (ListView)findViewById(R.id.listSecrets);
 		// Clear the list
@@ -259,9 +270,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		Cursor cursor = database.rawQuery("select rowid _id, "+ SecretStorage.COL_NAME + " from " + SecretStorage.DATABASE_NAME,null);
 		
 		list.setAdapter(new SimpleCursorAdapter(this, R.layout.listview_content, cursor, columns, to));
-		
 	}
 
+	/* (non-Javadoc)
+	 * @see android OnClickListener onClick()
+	 */
 	public void onClick(View v) {
 		
 		switch (v.getId())
@@ -303,6 +316,13 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		}
 	}
 
+	/**
+	 * Retrieve the secret from the database,
+	 * and decrypt it 
+	 * and how it in the GUI
+	 * @param pw password
+	 * @param name name of the secret
+	 */
 	private void retrieveSecret(final String pw, final String name) {
 		// This can take quite a while, we should not run it on the UI thread
 		new Thread(new Runnable() {
@@ -366,6 +386,12 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		}).start();
 	}
 
+	/**
+	 * Encrypt the secret and store it in the database
+	 * @param pw password
+	 * @param name name of secret
+	 * @param plaintext plaintext secret
+	 */
 	private void storeSecret(final String pw, final String name, final String plaintext) {
 		// This can take quite a while, we should not run it on the UI thread
 		new Thread(new Runnable() {
@@ -424,6 +450,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		
 	}
 
+	/* (non-Javadoc)
+	 * @see android OnItemClickListener onItemClick()
+	 */
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		
 		Cursor cursor = (Cursor) parent.getItemAtPosition(position);
@@ -434,6 +463,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		setState(STATE_ENTER_PASSWORD);
 	}
 
+	/* (non-Javadoc)
+	 * @see android OnItemLongClickListener onItemLongClick()
+	 */
 	public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 		Cursor cursor = (Cursor) parent.getItemAtPosition(position);
 		final String name = cursor.getString(cursor.getColumnIndex(SecretStorage.COL_NAME));
@@ -467,5 +499,45 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		
 		return true;
 	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onBackPressed()
+	 */
+	@Override
+	public void onBackPressed() {
+		if (state == STATE_LIST_SECRETS)
+		{
+			super.onBackPressed();
+		}
+		else
+		{
+			setState(STATE_LIST_SECRETS);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.optionsmenu, menu);
+	    return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+        case R.id.preferences:
+        	Intent i = new Intent(context, Preferences.class);
+    		startActivity(i);
+    		return true;
+        default:
+            return super.onOptionsItemSelected(item);
+    }	}
+	
 }
 
