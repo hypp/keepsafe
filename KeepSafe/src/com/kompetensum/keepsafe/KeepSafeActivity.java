@@ -18,7 +18,11 @@
 
 package com.kompetensum.keepsafe;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -39,6 +43,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.MonthDisplayHelper;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -51,6 +56,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.os.SystemClock;
 
 public class KeepSafeActivity extends Activity implements OnClickListener, OnItemClickListener, OnItemLongClickListener {
 	private SQLiteDatabase database;
@@ -60,13 +66,14 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 	// Crypto constants
 	static final int KEY_LENGTH = 256;
+	static final int IV_LENGTH_BYTES = 128 / 8; 
 	static final int DEFAULT_ITERATION_COUNT = 10000;
 	static final int DEFAULT_SALT_LENGTH = 8;
 	static final String PRNG = "SHA1PRNG";
 	static final String KDF = "PBKDF2WithHmacSHA1";
 	static final String CIPHER = "AES/CBC/PKCS5Padding";
 	static final String KEYTYPE = "AES";
-	static final int NONCE_LENGTH = 10;
+	static final int NONCE_LENGTH = 8 * 3;
 	
 	// Keep track of internal state
 	static final int STATE_INIT = 0;
@@ -346,7 +353,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	/**
 	 * Retrieve the secret from the database,
 	 * and decrypt it 
-	 * and how it in the GUI
+	 * and show it in the GUI
 	 * @param pw password
 	 * @param name name of the secret
 	 */
@@ -433,11 +440,28 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
 					
 					// Generate IV
-					byte[] nonce = new byte[NONCE_LENGTH];
-					prng.nextBytes(nonce);
+					ByteBuffer nonce = ByteBuffer.allocate(NONCE_LENGTH);
+
+					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+					long monotonic = preferences.getLong("monotonic", 1);
+					monotonic++;
+					SharedPreferences.Editor edit = preferences.edit();
+					edit.putLong("monotonic", monotonic);
+					edit.apply();
+	
+					nonce.putLong(monotonic);
+					
+					long currentTime = System.currentTimeMillis();
+					nonce.putLong(currentTime);
+					
+					long realTime =  SystemClock.elapsedRealtime();
+					nonce.putLong(realTime);
+					
 					Cipher cipher = Cipher.getInstance(CIPHER);
 					cipher.init(Cipher.ENCRYPT_MODE, key);
-					byte[] iv = cipher.doFinal(nonce);
+					byte[] iv = cipher.doFinal(nonce.array());
+					// Make sure iv is the correct length
+					iv = Arrays.copyOf(iv, IV_LENGTH_BYTES);
 						
 					// Encrypt the secret
 					cipher = Cipher.getInstance(CIPHER);
