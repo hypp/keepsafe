@@ -25,5 +25,6 @@
     <string name="ok">Ok</string>
 
     <string name="preferences">Preferences</string>
+    <string name="selftest">Self test</string>
     
 </resources>

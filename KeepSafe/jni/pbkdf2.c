@@ -104,7 +104,7 @@ exit:
 		return res;
 }
 
-#define _RUN_TESTS
+//#define _RUN_TESTS
 
 #ifdef _RUN_TESTS
 

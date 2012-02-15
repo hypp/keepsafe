@@ -1,8 +1,9 @@
 
 CURRENT_PATH := $(call my-dir)
-LOCAL_PATH := $(CURRENT_PATH)/polarssl-1.1.1/library
 
 include $(CLEAR_VARS)
+
+LOCAL_PATH := $(CURRENT_PATH)/polarssl-1.1.1/library
 
 LOCAL_C_INCLUDES := $(CURRENT_PATH)/polarssl-1.1.1/include
 
@@ -17,9 +18,12 @@ include $(CLEAR_VARS)
 
 LOCAL_PATH := $(CURRENT_PATH)
 
+LOCAL_C_INCLUDES := $(CURRENT_PATH)/polarssl-1.1.1/include
+
 LOCAL_MODULE    := keepsafe
-LOCAL_SRC_FILES := keepsafe.c
+LOCAL_SRC_FILES := keepsafe.c pbkdf2.c
 
 LOCAL_STATIC_LIBRARIES := polarssl
+
 
 include $(BUILD_SHARED_LIBRARY)

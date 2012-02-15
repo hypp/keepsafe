@@ -25,8 +25,7 @@
  * \param key_length	Length of generated key
  * \param output   Generated key. Must be at least as big as key_length
  *
- * \returns        0 on success, POLARSSL_ERR_MD_BAD_INPUT_DATA if parameter
- *                 verification fails.
+ * \returns        0 on success, -1 or a PolarSSL error code if verification fails.
  */
 int PKCS5_PBKDF2_HMAC(md_context_t *ctx, const unsigned char *password, size_t plen, const unsigned char *salt, size_t slen,
 			const unsigned long iteration_count, const unsigned long key_length, unsigned char *output);

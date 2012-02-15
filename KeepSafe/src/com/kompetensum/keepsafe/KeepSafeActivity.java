@@ -20,7 +20,6 @@ package com.kompetensum.keepsafe;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
@@ -43,7 +42,6 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.MonthDisplayHelper;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -439,6 +437,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					SecretKey tmp = keyFactory.generateSecret(keySpec);
 					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
 					
+			        byte[] k = Crypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
+
+					
 					// Generate IV
 					ByteBuffer nonce = ByteBuffer.allocate(NONCE_LENGTH);
 
@@ -574,9 +575,17 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
         case R.id.preferences:
-        	Intent i = new Intent(context, Preferences.class);
-    		startActivity(i);
-    		return true;
+	        {
+	        	Intent i = new Intent(context, Preferences.class);
+	    		startActivity(i);
+	    		return true;
+	        }
+        case R.id.selftest:
+	        {
+	        	Intent i = new Intent(context, SelfTest.class);
+	    		startActivity(i);
+	    		return true;
+	        }
         default:
             return super.onOptionsItemSelected(item);
     }	}

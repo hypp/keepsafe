@@ -23,6 +23,7 @@
             </intent-filter>
         </activity>
         <activity android:name="Preferences"></activity>
-    </application>
+        <activity android:name="SelfTest"></activity>
+        </application>
 
 </manifest>
