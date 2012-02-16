@@ -51,7 +51,6 @@ public class SelfTest extends Activity {
 	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		
 		// Show progressbar
@@ -120,6 +119,7 @@ public class SelfTest extends Activity {
 			        	// Show msgbox with failure
 			        	int x = 42;
 			        }
+			        
 			        
 			        
 			        
