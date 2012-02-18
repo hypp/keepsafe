@@ -160,6 +160,21 @@ public class SelfTest extends Activity {
 	        		
 	        	}
 
+	        	if (javakey != null && nativekey != null)
+	        	{
+					setStatus("Verify that Java key and Native key are identical");
+
+			        byte[] encoded1 = javakey.getEncoded();
+			        byte[] encoded2 = nativekey.getEncoded();
+			        
+			        if (Arrays.equals(encoded1, encoded2)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        		
+	        	}
+
 		        byte[] iv = new byte[IV_LENGTH_BYTES];
 		        prng.nextBytes(iv);
 				IvParameterSpec ivParams = new IvParameterSpec(iv);
@@ -214,17 +229,6 @@ public class SelfTest extends Activity {
 					}
 	        	}
 	        	
-	        	if (javajavact != null && nativejavact != null)
-	        	{
-					setStatus("Verify that ciphertexts are identical");
-
-			        if (Arrays.equals(javajavact, nativejavact)) {
-		        		setStatus("--- success");
-					} else {
-						setStatus("--- fail");
-					}
-	        	}
-	        	
 	        	byte[] javanativect = null;
 	        	if (javakey != null)
 	        	{
@@ -251,24 +255,20 @@ public class SelfTest extends Activity {
 					}
 	        	}
 	        	
-	        	if (javakey != null && nativekey != null)
+	        	if (javajavact != null && nativejavact != null)
 	        	{
-					setStatus("Verify that Java key and Native key are identical");
+					setStatus("Verify that ciphertexts are identical (1)");
 
-			        byte[] encoded1 = javakey.getEncoded();
-			        byte[] encoded2 = nativekey.getEncoded();
-			        
-			        if (Arrays.equals(encoded1, encoded2)) {
+			        if (Arrays.equals(javajavact, nativejavact)) {
 		        		setStatus("--- success");
 					} else {
 						setStatus("--- fail");
 					}
-	        		
 	        	}
-
+	        	
 	        	if (javanativect != null && nativenativect != null)
 	        	{
-					setStatus("Verify that ciphertexts are identical");
+					setStatus("Verify that ciphertexts are identical (2)");
 
 			        if (Arrays.equals(javanativect, nativenativect)) {
 		        		setStatus("--- success");
@@ -279,7 +279,7 @@ public class SelfTest extends Activity {
 
 	        	if (javanativect != null && javajavact != null)
 	        	{
-					setStatus("Verify that ciphertexts are identical");
+					setStatus("Verify that ciphertexts are identical (3)");
 
 			        if (Arrays.equals(javanativect, javajavact)) {
 		        		setStatus("--- success");
@@ -290,7 +290,7 @@ public class SelfTest extends Activity {
 
 	        	if (nativenativect != null && nativejavact != null)
 	        	{
-					setStatus("Verify that ciphertexts are identical");
+					setStatus("Verify that ciphertexts are identical (4)");
 
 			        if (Arrays.equals(nativenativect, nativejavact)) {
 		        		setStatus("--- success");
@@ -410,8 +410,6 @@ public class SelfTest extends Activity {
 				TextView tv = (TextView)findViewById(R.id.selftest);
 				String contents = (String) tv.getText();
 				tv.setText(contents + "\r\n" + str);
-				ScrollView sv = (ScrollView)findViewById(R.id.selftestScrollView);
-				sv.fullScroll(ScrollView.FOCUS_DOWN); 
 			}
 		});
 		Thread.yield();

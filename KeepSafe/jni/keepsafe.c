@@ -97,7 +97,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5
 	jbyte* native_ciphertext = NULL;
 
 	jsize klen = (*env)->GetArrayLength(env, key);
-	jsize klenbits = klen * sizeof(jbyte);
+	jsize klenbits = klen * 8;
 	native_key = (*env)->GetByteArrayElements(env, key, NULL);
 	if (native_key == NULL)
 	{
@@ -201,23 +201,23 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5
 	int error = ERROR;
 
 	jbyteArray plaintext = NULL;
-	jbyte* c = NULL;
-	jbyte* k = NULL;
+	jbyte* native_ciphertext = NULL;
+	jbyte* native_key = NULL;
 	unsigned char* iv = NULL;
-	jbyte* p = NULL;
+	jbyte* native_plaintext = NULL;
 	unsigned char* pt = NULL;
 
 	jsize clen = (*env)->GetArrayLength(env, ciphertext);
-	c = (*env)->GetByteArrayElements(env, ciphertext, NULL);
-	if (c == NULL)
+	native_ciphertext = (*env)->GetByteArrayElements(env, ciphertext, NULL);
+	if (native_ciphertext == NULL)
 	{
 		goto exit;
 	}
 
 	jsize klen = (*env)->GetArrayLength(env, key);
-	jsize klenbits = klen * sizeof(jbyte);
-	k = (*env)->GetByteArrayElements(env, key, NULL);
-	if (k == NULL)
+	jsize klenbits = klen * 8;
+	native_key = (*env)->GetByteArrayElements(env, key, NULL);
+	if (native_key == NULL)
 	{
 		goto exit;
 	}
@@ -239,13 +239,13 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5
 	}
 
 	aes_context ctx = {0};
-	int res = aes_setkey_dec(&ctx,k,klenbits);
+	int res = aes_setkey_dec(&ctx,native_key,klenbits);
 	if (res != 0)
 	{
 		goto exit;
 	}
 
-	res = aes_crypt_cbc(&ctx,AES_DECRYPT,clen,iv,c,pt);
+	res = aes_crypt_cbc(&ctx,AES_DECRYPT,clen,iv,native_ciphertext,pt);
 	if (res != 0)
 	{
 		goto exit;
@@ -275,14 +275,14 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5
 		goto exit;
 	}
 
-	p = (*env)->GetByteArrayElements(env, plaintext, NULL);
-	if (p == NULL)
+	native_plaintext = (*env)->GetByteArrayElements(env, plaintext, NULL);
+	if (native_plaintext == NULL)
 	{
 		goto exit;
 	}
 
 	// And copy the c plaintext to the java plaintext
-	memcpy(p,pt,plen);
+	memcpy(native_plaintext,pt,plen);
 
 	error = NO_ERROR;
 
@@ -292,9 +292,9 @@ exit:
 		free(pt);
 	}
 
-	if (p != NULL)
+	if (native_plaintext != NULL)
 	{
-		(*env)->ReleaseByteArrayElements(env, plaintext, p, 0);
+		(*env)->ReleaseByteArrayElements(env, plaintext, native_plaintext, 0);
 	}
 
 	if (iv != NULL)
@@ -302,14 +302,14 @@ exit:
 		free(iv);
 	}
 
-	if (k != NULL)
+	if (native_key != NULL)
 	{
-		(*env)->ReleaseByteArrayElements(env, key, k, JNI_ABORT);
+		(*env)->ReleaseByteArrayElements(env, key, native_key, JNI_ABORT);
 	}
 
-	if (c != NULL)
+	if (native_ciphertext != NULL)
 	{
-		(*env)->ReleaseByteArrayElements(env, ciphertext, c, JNI_ABORT);
+		(*env)->ReleaseByteArrayElements(env, ciphertext, native_ciphertext, JNI_ABORT);
 	}
 
 	if (error == ERROR)
