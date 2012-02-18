@@ -18,10 +18,18 @@
 
 package com.kompetensum.keepsafe;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.text.ChoiceFormat;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
@@ -31,6 +39,9 @@ import javax.crypto.spec.SecretKeySpec;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
 public class SelfTest extends Activity {
 
@@ -52,6 +63,7 @@ public class SelfTest extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.selftest);
 		
 		// Show progressbar
 		progress = ProgressDialog.show(this, getString(R.string.pleasewait), getString(R.string.processing));
@@ -61,72 +73,329 @@ public class SelfTest extends Activity {
 
 			public void run() {
 				
-				try {
-		        	int iterationCount = DEFAULT_ITERATION_COUNT;
-					int keyLength = KEY_LENGTH;
-	
-					// Generate a random salt
-		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
-		        	byte[] salt = new byte[DEFAULT_SALT_LENGTH];
+	        	int iterationCount = DEFAULT_ITERATION_COUNT;
+				int keyLength = KEY_LENGTH;
+	        	String pw = "ThisIsTheSecretPassword";
+	        	String secret = "And this is the very secret secret";
+				
+				SecureRandom prng = null;
+				SecretKeyFactory kf = null;
+				Cipher cipher = null;				
+						
+				setStatus("Check for Java PRNG");
+	        	try {
+					prng = SecureRandom.getInstance(PRNG);
+					setStatus("--- success");
+				} catch (NoSuchAlgorithmException e) {
+					setStatus("--- fail");
+				}
+
+				setStatus("Check for Java KDF");
+	        	try {
+					kf = SecretKeyFactory.getInstance(KDF);;
+					setStatus("--- success");
+				} catch (NoSuchAlgorithmException e) {
+					setStatus("--- fail");
+				}
+	        	
+				setStatus("Check for Java Cipher");
+	        	try {
+					cipher = Cipher.getInstance(CIPHER);
+					setStatus("--- success");
+				} catch (NoSuchAlgorithmException e) {
+					setStatus("--- fail");
+				} catch (NoSuchPaddingException e) {
+					setStatus("--- fail");
+				}
+	        	
+	        	byte[] salt = null;
+	        	if (prng != null)
+	        	{
+					setStatus("Generate salt using Java PRNG");
+	        		
+					salt = new byte[DEFAULT_SALT_LENGTH];
 		        	prng.nextBytes(salt);
 		        	
-		        	String pw = "ThisIsTheSecretPassword";
-		        	String secret = "And this is the very secret secret";
-		        	
-		        	// Generate a secret key from the password	
-		        	SecretKeyFactory keyFactory;
-					keyFactory = SecretKeyFactory.getInstance(KDF);
+		        	if (salt != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+
+	        	SecretKey javakey = null;	        	
+	        	if (salt != null)
+	        	{
+					setStatus("Generate key using Java KDF");
+	        		
 					PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
-					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key1 = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
-					
+					SecretKey tmp;
+					try {
+						tmp = kf.generateSecret(keySpec);
+						javakey = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
+			        	
+			        	if (javakey != null) {
+			        		setStatus("--- success");
+						} else {
+							setStatus("--- fail");
+						}
+					} catch (InvalidKeySpecException e) {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	SecretKey nativekey = null;
+	        	if (salt != null)
+	        	{
+					setStatus("Generate key using Native KDF");
+	        		
 			        byte[] k = Crypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
-			        SecretKey key2 = new SecretKeySpec(k, KEYTYPE);
-			        
-			        byte[] encoded1 = key1.getEncoded();
-			        byte[] encoded2 = key2.getEncoded();
-			        
-			        if (Arrays.equals(encoded1, encoded2))
-			        {
-			        	// All is well!
-			        	int x = 42;
-			        }
-			        else
-			        {
-			        	// Show msgbox with failure
-			        	int x = 42;
-			        }
-			        
-			        byte[] iv = new byte[IV_LENGTH_BYTES];
-			        prng.nextBytes(iv);
-					IvParameterSpec ivParams = new IvParameterSpec(iv);
-			        
-					Cipher cipher = Cipher.getInstance(CIPHER);
-					cipher.init(Cipher.ENCRYPT_MODE, key1, ivParams);
-					byte[] ct1 = cipher.doFinal(secret.getBytes());
-			        
-					cipher = Cipher.getInstance(CIPHER);
-					cipher.init(Cipher.ENCRYPT_MODE, key2, ivParams);
-					byte[] ct2 = cipher.doFinal(secret.getBytes());
+			        nativekey = new SecretKeySpec(k, KEYTYPE);
+		        	
+		        	if (nativekey != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        		
+	        	}
+
+		        byte[] iv = new byte[IV_LENGTH_BYTES];
+		        prng.nextBytes(iv);
+				IvParameterSpec ivParams = new IvParameterSpec(iv);
+				byte[] javajavact = null;
+	        	
+	        	if (javakey != null)
+	        	{
+					setStatus("Encrypt with Java key using Java Cipher");
 					
-			        if (Arrays.equals(ct1, ct2))
-			        {
-			        	// All is well!
-			        	int x = 42;
-			        }
-			        else
-			        {
-			        	// Show msgbox with failure
-			        	int x = 42;
-			        }
+					try {
+						cipher.init(Cipher.ENCRYPT_MODE, javakey, ivParams);
+						javajavact = cipher.doFinal(secret.getBytes());
+						
+				        if (javajavact != null) {
+			        		setStatus("--- success");
+						} else {
+							setStatus("--- fail");
+						}
+					} catch (IllegalBlockSizeException e) {
+						setStatus("--- fail");
+					} catch (BadPaddingException e) {
+						setStatus("--- fail");
+					} catch (InvalidKeyException e) {
+						setStatus("--- fail");
+					} catch (InvalidAlgorithmParameterException e) {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	byte[] nativejavact = null;
+	        	if (nativekey != null)
+	        	{
+					setStatus("Encrypt with Native key using Java Cipher");
+					
+					try {
+						cipher.init(Cipher.ENCRYPT_MODE, nativekey, ivParams);
+						nativejavact = cipher.doFinal(secret.getBytes());
+						
+				        if (nativejavact != null) {
+			        		setStatus("--- success");
+						} else {
+							setStatus("--- fail");
+						}
+					} catch (InvalidKeyException e) {
+						setStatus("--- fail");
+					} catch (InvalidAlgorithmParameterException e) {
+						setStatus("--- fail");
+					} catch (IllegalBlockSizeException e) {
+						setStatus("--- fail");
+					} catch (BadPaddingException e) {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	if (javajavact != null && nativejavact != null)
+	        	{
+					setStatus("Verify that ciphertexts are identical");
+
+			        if (Arrays.equals(javajavact, nativejavact)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	byte[] javanativect = null;
+	        	if (javakey != null)
+	        	{
+					setStatus("Encrypt with Java key using Native Cipher");
+					
+					javanativect = Crypto.AES256CBCPKCS5Padding_Encrypt(javakey.getEncoded(), iv, secret.getBytes());
+					if (javanativect != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+
+	        	byte[] nativenativect = null;
+	        	if (nativekey != null)
+	        	{
+					setStatus("Encrypt with Native key using Native Cipher");
+					
+					nativenativect = Crypto.AES256CBCPKCS5Padding_Encrypt(nativekey.getEncoded(), iv, secret.getBytes());
+					if (nativenativect != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	if (javakey != null && nativekey != null)
+	        	{
+					setStatus("Verify that Java key and Native key are identical");
+
+			        byte[] encoded1 = javakey.getEncoded();
+			        byte[] encoded2 = nativekey.getEncoded();
 			        
-			        
-			        
-			        
-				
-				} catch (Exception e) {
-					int x = 42;
-				}
+			        if (Arrays.equals(encoded1, encoded2)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        		
+	        	}
+
+	        	if (javanativect != null && nativenativect != null)
+	        	{
+					setStatus("Verify that ciphertexts are identical");
+
+			        if (Arrays.equals(javanativect, nativenativect)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+
+	        	if (javanativect != null && javajavact != null)
+	        	{
+					setStatus("Verify that ciphertexts are identical");
+
+			        if (Arrays.equals(javanativect, javajavact)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+
+	        	if (nativenativect != null && nativejavact != null)
+	        	{
+					setStatus("Verify that ciphertexts are identical");
+
+			        if (Arrays.equals(nativenativect, nativejavact)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	
+	        	if (javakey != null)
+	        	{
+					setStatus("Decrypt with Java key using Java Cipher");
+					
+					byte[] ct = javajavact;
+					if (ct == null)
+					{
+						ct = nativejavact;
+					}
+					
+					try {
+						cipher.init(Cipher.DECRYPT_MODE, javakey, ivParams);
+						byte[] plaintext = cipher.doFinal(ct);
+						
+						if (Arrays.equals(secret.getBytes(), plaintext)) {
+			        		setStatus("--- success");
+						} else {
+							setStatus("--- fail");
+						}
+					} catch (InvalidKeyException e) {
+						setStatus("--- fail");
+					} catch (InvalidAlgorithmParameterException e) {
+						setStatus("--- fail");
+					} catch (IllegalBlockSizeException e) {
+						setStatus("--- fail");
+					} catch (BadPaddingException e) {
+						setStatus("--- fail");
+					}
+	        	}
+
+	        	if (nativekey != null)
+	        	{
+					setStatus("Decrypt with Native key using Java Cipher");
+					
+					byte[] ct = javajavact;
+					if (ct == null)
+					{
+						ct = nativejavact;
+					}
+					
+					try {
+						cipher.init(Cipher.DECRYPT_MODE, nativekey, ivParams);
+						byte[] plaintext = cipher.doFinal(ct);
+						
+						if (Arrays.equals(secret.getBytes(), plaintext)) {
+			        		setStatus("--- success");
+						} else {
+							setStatus("--- fail");
+						}
+					} catch (InvalidKeyException e) {
+						setStatus("--- fail");
+					} catch (InvalidAlgorithmParameterException e) {
+						setStatus("--- fail");
+					} catch (IllegalBlockSizeException e) {
+						setStatus("--- fail");
+					} catch (BadPaddingException e) {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	
+	        	if (javakey != null)
+	        	{
+					setStatus("Decrypt with Java key using Native Cipher");
+					
+					byte[] ct = javajavact;
+					if (ct == null)
+					{
+						ct = nativejavact;
+					}
+					
+					byte plaintext[] = Crypto.AES256CBCPKCS5Padding_Decrypt(javakey.getEncoded(), iv, ct);
+					if (Arrays.equals(secret.getBytes(), plaintext)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
+	        	
+	        	if (nativekey != null)
+	        	{
+					setStatus("Decrypt with Native key using Native Cipher");
+					
+					byte[] ct = javajavact;
+					if (ct == null)
+					{
+						ct = nativejavact;
+					}
+					
+					byte plaintext[] = Crypto.AES256CBCPKCS5Padding_Decrypt(nativekey.getEncoded(), iv, ct);
+					if (Arrays.equals(secret.getBytes(), plaintext)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+	        	}
 				
 				progress.dismiss();
 			}
@@ -134,6 +403,19 @@ public class SelfTest extends Activity {
 		}).start();
 	}
 	
-	
+	private void setStatus(final String str)
+	{
+		runOnUiThread(new Runnable() {
+			public void run() {
+				TextView tv = (TextView)findViewById(R.id.selftest);
+				String contents = (String) tv.getText();
+				tv.setText(contents + "\r\n" + str);
+				ScrollView sv = (ScrollView)findViewById(R.id.selftestScrollView);
+				sv.fullScroll(ScrollView.FOCUS_DOWN); 
+			}
+		});
+		Thread.yield();
+		
+	}
 
 }

@@ -15,6 +15,22 @@ extern "C" {
 JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_PBKDF2WithHmacSHA1
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jint, jint);
 
+/*
+ * Class:     com_kompetensum_keepsafe_Crypto
+ * Method:    AES256CBCPKCS5Padding_Encrypt
+ * Signature: ([B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5Padding_1Encrypt
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     com_kompetensum_keepsafe_Crypto
+ * Method:    AES256CBCPKCS5Padding_Decrypt
+ * Signature: ([B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5Padding_1Decrypt
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

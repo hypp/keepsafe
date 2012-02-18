@@ -26,6 +26,30 @@ public class Crypto {
 		System.loadLibrary(LIBNAME);
 	}
 	
-	public static native byte[] PBKDF2WithHmacSHA1(byte[] password, byte[] salt, int iterationCount, int keyLength);
+	/**
+	 * Native implementation of Javas PBKDF2WithHmacSHA1
+	 * @param password
+	 * @param salt
+	 * @param iterationCount
+	 * @param keyLength
+	 * @return key
+	 */
+	public static native byte[] PBKDF2WithHmacSHA1(final byte[] password, final byte[] salt, final int iterationCount, final int keyLength);
+
+	/**
+	 * Native implementation of Javas AES/CBC/PKCS5Padding with keylength 256
+	 * @param key
+	 * @param plaintext
+	 * @return ciphertext
+	 */
+	public static native byte[] AES256CBCPKCS5Padding_Encrypt(final byte[] key, final byte[] iv, final byte[] plaintext);
+	
+	/**
+	 * Native implementation of Javas AES/CBC/PKCS5Padding with keylength 256
+	 * @param key
+	 * @param ciphertext
+	 * @return plaintext
+	 */
+	public static native byte[] AES256CBCPKCS5Padding_Decrypt(final byte[] key, final byte[] iv, final byte[] ciphertext);
 
 }
