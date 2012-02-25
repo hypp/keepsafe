@@ -42,16 +42,6 @@ import android.widget.TextView;
 
 public class SelfTest extends Activity {
 
-	static final int KEY_LENGTH = 256;
-	static final int IV_LENGTH_BYTES = 128 / 8; 
-	static final int DEFAULT_ITERATION_COUNT = 10000;
-	static final int DEFAULT_SALT_LENGTH = 8;
-	static final String PRNG = "SHA1PRNG";
-	static final String KDF = "PBKDF2WithHmacSHA1";
-	static final String CIPHER = "AES/CBC/PKCS5Padding";
-	static final String KEYTYPE = "AES";
-	static final int NONCE_LENGTH = 8 * 3;
-	
 	private ProgressDialog progress;
 
 	/* (non-Javadoc)
@@ -70,8 +60,8 @@ public class SelfTest extends Activity {
 
 			public void run() {
 				
-	        	int iterationCount = DEFAULT_ITERATION_COUNT;
-				int keyLength = KEY_LENGTH;
+	        	int iterationCount = CryptoInterface.DEFAULT_ITERATION_COUNT;
+				int keyLength = CryptoInterface.KEY_LENGTH;
 	        	String pw = "ThisIsTheSecretPassword";
 	        	String secret = "And this is the very secret secret";
 				
@@ -81,7 +71,7 @@ public class SelfTest extends Activity {
 						
 				setStatus("Check for Java PRNG");
 	        	try {
-					prng = SecureRandom.getInstance(PRNG);
+					prng = SecureRandom.getInstance(CryptoInterface.PRNG);
 					setStatus("--- success");
 				} catch (NoSuchAlgorithmException e) {
 					setStatus("--- fail");
@@ -89,7 +79,7 @@ public class SelfTest extends Activity {
 
 				setStatus("Check for Java KDF");
 	        	try {
-					kf = SecretKeyFactory.getInstance(KDF);;
+					kf = SecretKeyFactory.getInstance(CryptoInterface.KDF);;
 					setStatus("--- success");
 				} catch (NoSuchAlgorithmException e) {
 					setStatus("--- fail");
@@ -97,7 +87,7 @@ public class SelfTest extends Activity {
 	        	
 				setStatus("Check for Java Cipher");
 	        	try {
-					cipher = Cipher.getInstance(CIPHER);
+					cipher = Cipher.getInstance(CryptoInterface.CIPHER);
 					setStatus("--- success");
 				} catch (NoSuchAlgorithmException e) {
 					setStatus("--- fail");
@@ -110,7 +100,7 @@ public class SelfTest extends Activity {
 	        	{
 					setStatus("Generate salt using Java PRNG");
 	        		
-					salt = new byte[DEFAULT_SALT_LENGTH];
+					salt = new byte[CryptoInterface.DEFAULT_SALT_LENGTH];
 		        	prng.nextBytes(salt);
 		        	
 	        		setStatus("--- success");
@@ -119,7 +109,7 @@ public class SelfTest extends Activity {
 	        	byte[] nativesalt = null;
 	        	setStatus("Generate salt using native PRNG");
 	        	
-	        	nativesalt = NativeCrypto.GenerateRandom(DEFAULT_SALT_LENGTH);
+	        	nativesalt = NativeCrypto.GenerateRandom(CryptoInterface.DEFAULT_SALT_LENGTH);
 	        	if (nativesalt != null) {
 	        		setStatus("--- success");
 				} else {
@@ -135,7 +125,7 @@ public class SelfTest extends Activity {
 					SecretKey tmp;
 					try {
 						tmp = kf.generateSecret(keySpec);
-						javakey = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
+						javakey = new SecretKeySpec(tmp.getEncoded(), CryptoInterface.KEYTYPE);
 			        	
 		        		setStatus("--- success");
 					} catch (InvalidKeySpecException e) {
@@ -149,7 +139,7 @@ public class SelfTest extends Activity {
 					setStatus("Generate key using Native KDF");
 	        		
 			        byte[] k = NativeCrypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
-			        nativekey = new SecretKeySpec(k, KEYTYPE);
+			        nativekey = new SecretKeySpec(k, CryptoInterface.KEYTYPE);
 		        	
 	        		setStatus("--- success");
 	        	}
@@ -169,7 +159,7 @@ public class SelfTest extends Activity {
 	        		
 	        	}
 
-		        byte[] iv = new byte[IV_LENGTH_BYTES];
+		        byte[] iv = new byte[CryptoInterface.IV_LENGTH_BYTES];
 		        prng.nextBytes(iv);
 				IvParameterSpec ivParams = new IvParameterSpec(iv);
 				byte[] javajavact = null;
@@ -390,7 +380,43 @@ public class SelfTest extends Activity {
 						setStatus("--- fail");
 					}
 	        	}
-				
+	        	
+	        	byte[] singlesalt = null;
+	        	byte[] singleiv = null;
+	        	byte[] singleciphertext = null;
+	        	try {
+		        	setStatus("Single operation encrypt using Java");
+		        	JavaCrypto jc = new JavaCrypto();
+		        	singlesalt = new byte[CryptoInterface.DEFAULT_SALT_LENGTH];
+		        	singleiv = new byte[CryptoInterface.IV_LENGTH_BYTES];
+					singleciphertext = jc.Encrypt(pw.toCharArray(), secret.getBytes("UTF-8"), 
+							singlesalt, CryptoInterface.DEFAULT_SALT_LENGTH, CryptoInterface.DEFAULT_ITERATION_COUNT, 0, singleiv);
+					if (singleciphertext != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+						
+				} catch (Exception e) {
+					setStatus("--- fail");
+				}
+
+	        	try {
+		        	setStatus("Single operation decrypt using Java");
+		        	JavaCrypto jc = new JavaCrypto();
+					byte[] singleplaintext = jc.Decrypt(pw.toCharArray(), singlesalt, 
+							CryptoInterface.DEFAULT_ITERATION_COUNT, singleiv, singleciphertext);
+					
+					if (Arrays.equals(secret.getBytes("UTF-8"), singleplaintext)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+						
+				} catch (Exception e) {
+					setStatus("--- fail");
+				}
+	        	
 				progress.dismiss();
 			}
 			
