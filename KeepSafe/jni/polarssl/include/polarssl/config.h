@@ -203,7 +203,7 @@
  *
  * Enable the checkup functions (*_self_test).
  */
-#define POLARSSL_SELF_TEST
+//#define POLARSSL_SELF_TEST
 
 /**
  * \def POLARSSL_X509_ALLOW_UNSUPPORTED_CRITICAL_EXTENSION
@@ -343,7 +343,7 @@
  *
  * This module provides the CTR_DRBG AES-256 random number generator.
  */
-//#define POLARSSL_CTR_DRBG_C
+#define POLARSSL_CTR_DRBG_C
 
 /**
  * \def POLARSSL_DEBUG_C
@@ -401,7 +401,7 @@
  *
  * This module provides a generic entropy pool
  */
-//#define POLARSSL_ENTROPY_C
+#define POLARSSL_ENTROPY_C
 
 /**
  * \def POLARSSL_ERROR_C
@@ -413,7 +413,7 @@
  *
  * This module enables err_strerror().
  */
-#define POLARSSL_ERROR_C
+//#define POLARSSL_ERROR_C
 
 /**
  * \def POLARSSL_HAVEGE_C
@@ -427,7 +427,7 @@
  *
  * This module enables the HAVEGE random number generator.
  */
-#define POLARSSL_HAVEGE_C
+//#define POLARSSL_HAVEGE_C
 
 /**
  * \def POLARSSL_MD_C
@@ -590,7 +590,7 @@
  *
  * This module adds support for SHA-384 and SHA-512.
  */
-//#define POLARSSL_SHA4_C
+#define POLARSSL_SHA4_C
 
 /**
  * \def POLARSSL_SSL_CLI_C
@@ -645,7 +645,7 @@
  *
  * This module is used by the HAVEGE random number generator.
  */
-#define POLARSSL_TIMING_C
+//#define POLARSSL_TIMING_C
 
 /**
  * \def POLARSSL_VERSION_C

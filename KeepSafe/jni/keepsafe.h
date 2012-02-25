@@ -31,6 +31,14 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5
 JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5Padding_1Decrypt
   (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray);
 
+/*
+ * Class:     com_kompetensum_keepsafe_Crypto
+ * Method:    GenerateRandom
+ * Signature: (I)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_GenerateRandom
+  (JNIEnv *, jclass, jint);
+
 #ifdef __cplusplus
 }
 #endif

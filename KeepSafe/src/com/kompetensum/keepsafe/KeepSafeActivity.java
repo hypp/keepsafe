@@ -40,6 +40,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -92,6 +93,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	private int state = STATE_INIT;
 	private int iteration_count = DEFAULT_ITERATION_COUNT;
 	private int salt_length = DEFAULT_SALT_LENGTH;
+	
+	private String ABOUT_URL = "http://code.google.com/p/keepsafe/";
 	
     /** Called when the activity is first created. */
 	/* (non-Javadoc)
@@ -380,6 +383,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					byte[] iv = values.getAsByteArray(SecretStorage.COL_IV);
 					byte[] ciphertext = values.getAsByteArray(SecretStorage.COL_VALUE);
 					
+					
 		        	// Generate a secret key from the password	
 		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
 		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
@@ -390,6 +394,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					IvParameterSpec ivParams = new IvParameterSpec(iv);
 					cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
 					byte[] plaintext = cipher.doFinal(ciphertext);
+					
+					
 					final String tmpstr = new String(plaintext, "UTF-8");
 					
 					runOnUiThread(new Runnable() {
@@ -583,6 +589,13 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
         case R.id.selftest:
 	        {
 	        	Intent i = new Intent(context, SelfTest.class);
+	    		startActivity(i);
+	    		return true;
+	        }
+        case R.id.about:
+	        {
+	        	Intent i = new Intent(Intent.ACTION_VIEW);
+	        	i.setData(Uri.parse(ABOUT_URL));
 	    		startActivity(i);
 	    		return true;
 	        }

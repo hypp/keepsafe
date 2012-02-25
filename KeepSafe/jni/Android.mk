@@ -8,7 +8,7 @@ LOCAL_PATH := $(CURRENT_PATH)/polarssl/library
 LOCAL_C_INCLUDES := $(CURRENT_PATH)/polarssl/include
 
 LOCAL_MODULE    := polarssl
-LOCAL_SRC_FILES := aes.c sha1.c md_wrap.c md.c timing.c havege.c
+LOCAL_SRC_FILES := aes.c sha1.c sha4.c md_wrap.c md.c ctr_drbg.c entropy_poll.c entropy.c
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -27,3 +27,4 @@ LOCAL_STATIC_LIBRARIES := polarssl
 
 
 include $(BUILD_SHARED_LIBRARY)
+

@@ -2,9 +2,13 @@
 #include "keepsafe.h"
 #include "pbkdf2.h"
 #include <polarssl/aes.h>
+#include <polarssl/entropy.h>
+#include <polarssl/ctr_drbg.h>
 
 #define ERROR -1
 #define NO_ERROR 0
+
+#define MAGIC_STR "keepsafe"
 
 JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_PBKDF2WithHmacSHA1
   (JNIEnv *env, jclass object, jbyteArray password, jbyteArray salt, jint iteration_count, jint key_length)
@@ -320,6 +324,56 @@ exit:
 	return plaintext;
 }
 
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_GenerateRandom
+  (JNIEnv *env, jclass object, jint numBytes)
+{
+	int error = ERROR;
+	jbyteArray random = NULL;
+	jbyte* native_random = NULL;
+
+	random = (*env)->NewByteArray(env, numBytes);
+	if (random == NULL)
+	{
+		goto exit;
+	}
+
+	native_random = (*env)->GetByteArrayElements(env, random, NULL);
+	if (native_random == NULL)
+	{
+		goto exit;
+	}
+
+    entropy_context entropy;
+    entropy_init(&entropy);
+
+    ctr_drbg_context ctr_drbg;
+    int res = ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, MAGIC_STR, strlen(MAGIC_STR));
+	if (res != 0)
+	{
+		goto exit;
+	}
+
+    res = ctr_drbg_random(&ctr_drbg, native_random, numBytes);
+	if (res != 0)
+	{
+		goto exit;
+	}
 
 
+	error = NO_ERROR;
+
+exit:
+
+	if (native_random != NULL)
+	{
+		(*env)->ReleaseByteArrayElements(env, random, native_random, 0);
+	}
+
+	if (error == ERROR)
+	{
+		random = NULL;
+	}
+
+	return random;
+}
 

@@ -26,5 +26,6 @@
 
     <string name="preferences">Preferences</string>
     <string name="selftest">Self test</string>
+    <string name="about">About</string>
     
 </resources>

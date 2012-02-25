@@ -23,7 +23,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.text.ChoiceFormat;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -39,8 +38,6 @@ import javax.crypto.spec.SecretKeySpec;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class SelfTest extends Activity {
@@ -116,12 +113,18 @@ public class SelfTest extends Activity {
 					salt = new byte[DEFAULT_SALT_LENGTH];
 		        	prng.nextBytes(salt);
 		        	
-		        	if (salt != null) {
-		        		setStatus("--- success");
-					} else {
-						setStatus("--- fail");
-					}
+	        		setStatus("--- success");
 	        	}
+	        	
+	        	byte[] nativesalt = null;
+	        	setStatus("Generate salt using native PRNG");
+	        	
+	        	nativesalt = Crypto.GenerateRandom(DEFAULT_SALT_LENGTH);
+	        	if (nativesalt != null) {
+	        		setStatus("--- success");
+				} else {
+					setStatus("--- fail");
+				}
 
 	        	SecretKey javakey = null;	        	
 	        	if (salt != null)
@@ -134,11 +137,7 @@ public class SelfTest extends Activity {
 						tmp = kf.generateSecret(keySpec);
 						javakey = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
 			        	
-			        	if (javakey != null) {
-			        		setStatus("--- success");
-						} else {
-							setStatus("--- fail");
-						}
+		        		setStatus("--- success");
 					} catch (InvalidKeySpecException e) {
 						setStatus("--- fail");
 					}
@@ -152,12 +151,7 @@ public class SelfTest extends Activity {
 			        byte[] k = Crypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
 			        nativekey = new SecretKeySpec(k, KEYTYPE);
 		        	
-		        	if (nativekey != null) {
-		        		setStatus("--- success");
-					} else {
-						setStatus("--- fail");
-					}
-	        		
+	        		setStatus("--- success");
 	        	}
 
 	        	if (javakey != null && nativekey != null)
@@ -409,7 +403,7 @@ public class SelfTest extends Activity {
 			public void run() {
 				TextView tv = (TextView)findViewById(R.id.selftest);
 				String contents = (String) tv.getText();
-				tv.setText(contents + "\r\n" + str);
+				tv.setText(str + "\r\n" + contents);
 			}
 		});
 		Thread.yield();

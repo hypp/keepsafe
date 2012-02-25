@@ -51,5 +51,13 @@ public class Crypto {
 	 * @return plaintext
 	 */
 	public static native byte[] AES256CBCPKCS5Padding_Decrypt(final byte[] key, final byte[] iv, final byte[] ciphertext);
+	
+	/**
+	 * Native implementation of PRNG. 
+	 * It will most likely be another implementation than Javas SHA1PRNG
+	 * @param numBytes Number of bytes to return
+	 * @return Random bytes
+	 */
+	public static native byte[] GenerateRandom(final int numBytes);
 
 }
