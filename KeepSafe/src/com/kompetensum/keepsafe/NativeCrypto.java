@@ -18,7 +18,7 @@
 
 package com.kompetensum.keepsafe;
 
-public class Crypto {
+public class NativeCrypto {
 	
 	private static final String LIBNAME = "keepsafe";
 	

@@ -10,7 +10,7 @@
 
 #define MAGIC_STR "keepsafe"
 
-JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_PBKDF2WithHmacSHA1
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_PBKDF2WithHmacSHA1
   (JNIEnv *env, jclass object, jbyteArray password, jbyteArray salt, jint iteration_count, jint key_length)
 {
 	int error = ERROR;
@@ -89,7 +89,7 @@ exit:
 
 #define AES256_BLOCK_SIZE 16
 
-JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5Padding_1Encrypt
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AES256CBCPKCS5Padding_1Encrypt
   (JNIEnv *env, jclass object, jbyteArray key, jbyteArray initvec, jbyteArray plaintext)
 {
 	int error = ERROR;
@@ -199,7 +199,7 @@ exit:
 	return ciphertext;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_AES256CBCPKCS5Padding_1Decrypt
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AES256CBCPKCS5Padding_1Decrypt
   (JNIEnv *env, jclass object, jbyteArray key, jbyteArray initvec, jbyteArray ciphertext)
 {
 	int error = ERROR;
@@ -324,7 +324,7 @@ exit:
 	return plaintext;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_Crypto_GenerateRandom
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_GenerateRandom
   (JNIEnv *env, jclass object, jint numBytes)
 {
 	int error = ERROR;

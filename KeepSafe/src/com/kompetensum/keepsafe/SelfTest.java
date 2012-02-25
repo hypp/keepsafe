@@ -119,7 +119,7 @@ public class SelfTest extends Activity {
 	        	byte[] nativesalt = null;
 	        	setStatus("Generate salt using native PRNG");
 	        	
-	        	nativesalt = Crypto.GenerateRandom(DEFAULT_SALT_LENGTH);
+	        	nativesalt = NativeCrypto.GenerateRandom(DEFAULT_SALT_LENGTH);
 	        	if (nativesalt != null) {
 	        		setStatus("--- success");
 				} else {
@@ -148,7 +148,7 @@ public class SelfTest extends Activity {
 	        	{
 					setStatus("Generate key using Native KDF");
 	        		
-			        byte[] k = Crypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
+			        byte[] k = NativeCrypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
 			        nativekey = new SecretKeySpec(k, KEYTYPE);
 		        	
 	        		setStatus("--- success");
@@ -228,7 +228,7 @@ public class SelfTest extends Activity {
 	        	{
 					setStatus("Encrypt with Java key using Native Cipher");
 					
-					javanativect = Crypto.AES256CBCPKCS5Padding_Encrypt(javakey.getEncoded(), iv, secret.getBytes());
+					javanativect = NativeCrypto.AES256CBCPKCS5Padding_Encrypt(javakey.getEncoded(), iv, secret.getBytes());
 					if (javanativect != null) {
 		        		setStatus("--- success");
 					} else {
@@ -241,7 +241,7 @@ public class SelfTest extends Activity {
 	        	{
 					setStatus("Encrypt with Native key using Native Cipher");
 					
-					nativenativect = Crypto.AES256CBCPKCS5Padding_Encrypt(nativekey.getEncoded(), iv, secret.getBytes());
+					nativenativect = NativeCrypto.AES256CBCPKCS5Padding_Encrypt(nativekey.getEncoded(), iv, secret.getBytes());
 					if (nativenativect != null) {
 		        		setStatus("--- success");
 					} else {
@@ -365,7 +365,7 @@ public class SelfTest extends Activity {
 						ct = nativejavact;
 					}
 					
-					byte plaintext[] = Crypto.AES256CBCPKCS5Padding_Decrypt(javakey.getEncoded(), iv, ct);
+					byte plaintext[] = NativeCrypto.AES256CBCPKCS5Padding_Decrypt(javakey.getEncoded(), iv, ct);
 					if (Arrays.equals(secret.getBytes(), plaintext)) {
 		        		setStatus("--- success");
 					} else {
@@ -383,7 +383,7 @@ public class SelfTest extends Activity {
 						ct = nativejavact;
 					}
 					
-					byte plaintext[] = Crypto.AES256CBCPKCS5Padding_Decrypt(nativekey.getEncoded(), iv, ct);
+					byte plaintext[] = NativeCrypto.AES256CBCPKCS5Padding_Decrypt(nativekey.getEncoded(), iv, ct);
 					if (Arrays.equals(secret.getBytes(), plaintext)) {
 		        		setStatus("--- success");
 					} else {

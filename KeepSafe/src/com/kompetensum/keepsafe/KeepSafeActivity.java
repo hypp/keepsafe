@@ -18,17 +18,9 @@
 
 package com.kompetensum.keepsafe;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.util.Arrays;
-
 import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -55,24 +47,12 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.os.SystemClock;
 
 public class KeepSafeActivity extends Activity implements OnClickListener, OnItemClickListener, OnItemLongClickListener {
 	private SQLiteDatabase database;
 	private Context context;
 	
 	private ProgressDialog progress;
-	
-	// Crypto constants
-	static final int KEY_LENGTH = 256;
-	static final int IV_LENGTH_BYTES = 128 / 8; 
-	static final int DEFAULT_ITERATION_COUNT = 10000;
-	static final int DEFAULT_SALT_LENGTH = 8;
-	static final String PRNG = "SHA1PRNG";
-	static final String KDF = "PBKDF2WithHmacSHA1";
-	static final String CIPHER = "AES/CBC/PKCS5Padding";
-	static final String KEYTYPE = "AES";
-	static final int NONCE_LENGTH = 8 * 3;
 	
 	// Keep track of internal state
 	static final int STATE_INIT = 0;
@@ -91,10 +71,12 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	static final int STATE_FAILED_ALGORITHMS = 130;
 	
 	private int state = STATE_INIT;
-	private int iteration_count = DEFAULT_ITERATION_COUNT;
-	private int salt_length = DEFAULT_SALT_LENGTH;
+	private int iteration_count = CryptoInterface.DEFAULT_ITERATION_COUNT;
+	private int salt_length = CryptoInterface.DEFAULT_SALT_LENGTH;
 	
 	private String ABOUT_URL = "http://code.google.com/p/keepsafe/";
+	
+	private CryptoInterface crypto = new JavaCrypto();
 	
     /** Called when the activity is first created. */
 	/* (non-Javadoc)
@@ -134,9 +116,9 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
             	// Sanity checks!
             	try
             	{
-		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
-		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
-					Cipher cipher = Cipher.getInstance(CIPHER);
+		        	SecureRandom.getInstance(CryptoInterface.PRNG);
+		        	SecretKeyFactory.getInstance(CryptoInterface.KDF);
+					Cipher.getInstance(CryptoInterface.CIPHER);
 
 	            	setState(STATE_LIST_SECRETS);
             	} catch (Exception e) {
@@ -161,13 +143,13 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		iteration_count = Integer.parseInt(tmp);
 		if (iteration_count == 0)
 		{
-			iteration_count = DEFAULT_ITERATION_COUNT;
+			iteration_count = CryptoInterface.DEFAULT_ITERATION_COUNT;
 		}
 		tmp = preferences.getString("salt_length", "");
 		salt_length = Integer.parseInt(tmp);
 		if (salt_length == 0)
 		{
-			salt_length = DEFAULT_SALT_LENGTH;
+			salt_length = CryptoInterface.DEFAULT_SALT_LENGTH;
 		}
 	}
 
@@ -376,25 +358,13 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					ContentValues values = new ContentValues();
 					DatabaseUtils.cursorRowToContentValues(cursor, values);
 	
-					int keyLength = KEY_LENGTH;
-					
 					byte[] salt = values.getAsByteArray(SecretStorage.COL_SALT);
 					int iterationCount = values.getAsInteger(SecretStorage.COL_ITERATION_COUNT);
 					byte[] iv = values.getAsByteArray(SecretStorage.COL_IV);
 					byte[] ciphertext = values.getAsByteArray(SecretStorage.COL_VALUE);
 					
-					
-		        	// Generate a secret key from the password	
-		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
-		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
-					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
-					
-					Cipher cipher = Cipher.getInstance(CIPHER);
-					IvParameterSpec ivParams = new IvParameterSpec(iv);
-					cipher.init(Cipher.DECRYPT_MODE, key, ivParams);
-					byte[] plaintext = cipher.doFinal(ciphertext);
-					
+					// Decrypt the secret
+					byte[] plaintext = crypto.Decrypt(pw.toCharArray(), salt, iterationCount, iv, ciphertext);
 					
 					final String tmpstr = new String(plaintext, "UTF-8");
 					
@@ -428,53 +398,22 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			public void run() {
 				
 				try {
-					int keyLength = KEY_LENGTH;
 					int iterationCount = iteration_count;
 					int saltLength = salt_length;
 					
-					// Generate a random salt
-		        	SecureRandom prng = SecureRandom.getInstance(PRNG);
 		        	byte[] salt = new byte[saltLength];
-		        	prng.nextBytes(salt);
-		        	
-		        	// Generate a secret key from the password	
-		        	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
-		        	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
-					SecretKey tmp = keyFactory.generateSecret(keySpec);
-					SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
-					
-			        byte[] k = Crypto.PBKDF2WithHmacSHA1(pw.getBytes(), salt, iterationCount, keyLength / 8);
 
-					
-					// Generate IV
-					ByteBuffer nonce = ByteBuffer.allocate(NONCE_LENGTH);
-
-					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		        	SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 					long monotonic = preferences.getLong("monotonic", 1);
 					monotonic++;
 					SharedPreferences.Editor edit = preferences.edit();
 					edit.putLong("monotonic", monotonic);
 					edit.apply();
 	
-					nonce.putLong(monotonic);
-					
-					long currentTime = System.currentTimeMillis();
-					nonce.putLong(currentTime);
-					
-					long realTime =  SystemClock.elapsedRealtime();
-					nonce.putLong(realTime);
-					
-					Cipher cipher = Cipher.getInstance(CIPHER);
-					cipher.init(Cipher.ENCRYPT_MODE, key);
-					byte[] iv = cipher.doFinal(nonce.array());
-					// Make sure iv is the correct length
-					iv = Arrays.copyOf(iv, IV_LENGTH_BYTES);
+					byte[] iv = new byte[CryptoInterface.IV_LENGTH_BYTES];
 						
 					// Encrypt the secret
-					cipher = Cipher.getInstance(CIPHER);
-					IvParameterSpec ivParams = new IvParameterSpec(iv);
-					cipher.init(Cipher.ENCRYPT_MODE, key, ivParams);
-					byte[] ciphertext = cipher.doFinal(plaintext.getBytes("UTF-8"));
+					byte[] ciphertext = crypto.Encrypt(pw.toCharArray(), plaintext.getBytes("UTF-8"), salt, saltLength, iterationCount, monotonic, iv);
 					
 					// Store it to the database
 					
