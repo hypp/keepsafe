@@ -42,6 +42,17 @@ import android.widget.TextView;
 
 public class SelfTest extends Activity {
 
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onPause()
+	 */
+	@Override
+	protected void onPause() {
+		progress.dismiss();
+		super.onPause();
+		
+		// TODO Stop thread!
+	}
+
 	private ProgressDialog progress;
 
 	/* (non-Javadoc)
@@ -60,8 +71,8 @@ public class SelfTest extends Activity {
 
 			public void run() {
 				
-	        	int iterationCount = CryptoInterface.DEFAULT_ITERATION_COUNT;
-				int keyLength = CryptoInterface.KEY_LENGTH;
+	        	int iterationCount = 10; // CryptoInterface.DEFAULT_ITERATION_COUNT;
+				int keyLength = CryptoInterface.KEY_LENGTH_BITS;
 	        	String pw = "ThisIsTheSecretPassword";
 	        	String secret = "And this is the very secret secret";
 				
@@ -389,8 +400,8 @@ public class SelfTest extends Activity {
 		        	JavaCrypto jc = new JavaCrypto();
 		        	singlesalt = new byte[CryptoInterface.DEFAULT_SALT_LENGTH];
 		        	singleiv = new byte[CryptoInterface.IV_LENGTH_BYTES];
-					singleciphertext = jc.Encrypt(pw.toCharArray(), secret.getBytes("UTF-8"), 
-							singlesalt, CryptoInterface.DEFAULT_SALT_LENGTH, CryptoInterface.DEFAULT_ITERATION_COUNT, 0, singleiv);
+					singleciphertext = jc.Encrypt(pw, secret.getBytes("UTF-8"), 
+							singlesalt, iterationCount, 0, singleiv);
 					if (singleciphertext != null) {
 		        		setStatus("--- success");
 					} else {
@@ -404,8 +415,44 @@ public class SelfTest extends Activity {
 	        	try {
 		        	setStatus("Single operation decrypt using Java");
 		        	JavaCrypto jc = new JavaCrypto();
-					byte[] singleplaintext = jc.Decrypt(pw.toCharArray(), singlesalt, 
-							CryptoInterface.DEFAULT_ITERATION_COUNT, singleiv, singleciphertext);
+					byte[] singleplaintext = jc.Decrypt(pw, singlesalt, 
+							iterationCount, singleiv, singleciphertext);
+					
+					if (Arrays.equals(secret.getBytes("UTF-8"), singleplaintext)) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+						
+				} catch (Exception e) {
+					setStatus("--- fail");
+				}
+
+	        	singlesalt = null;
+	        	singleiv = null;
+	        	singleciphertext = null;
+	        	try {
+		        	setStatus("Single operation encrypt using Native");
+		        	NativeCrypto nc = new NativeCrypto();
+		        	singlesalt = new byte[CryptoInterface.DEFAULT_SALT_LENGTH];
+		        	singleiv = new byte[CryptoInterface.IV_LENGTH_BYTES];
+					singleciphertext = nc.Encrypt(pw, secret.getBytes("UTF-8"), 
+							singlesalt, iterationCount, 0, singleiv);
+					if (singleciphertext != null) {
+		        		setStatus("--- success");
+					} else {
+						setStatus("--- fail");
+					}
+						
+				} catch (Exception e) {
+					setStatus("--- fail");
+				}
+
+	        	try {
+		        	setStatus("Single operation decrypt using Native");
+		        	NativeCrypto nc = new NativeCrypto();
+					byte[] singleplaintext = nc.Decrypt(pw, singlesalt, 
+							iterationCount, singleiv, singleciphertext);
 					
 					if (Arrays.equals(secret.getBytes("UTF-8"), singleplaintext)) {
 		        		setStatus("--- success");

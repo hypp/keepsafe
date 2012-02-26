@@ -9,6 +9,7 @@
             android:key="salt_length" 
             android:defaultValue="8" 
             android:inputType="number"/>
+        <ListPreference android:key="crypto_implementation" android:title="Crypto implementation" android:entries="@array/crypto" android:entryValues="@array/crypto"/>
     </PreferenceCategory>
     
 

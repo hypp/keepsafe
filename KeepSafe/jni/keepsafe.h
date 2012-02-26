@@ -39,6 +39,22 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AES256CB
 JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_GenerateRandom
   (JNIEnv *, jclass, jint);
 
+/*
+ * Class:     com_kompetensum_keepsafe_NativeCrypto
+ * Method:    AllInOneDecrypt
+ * Signature: ([B[BI[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AllInOneDecrypt
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jint, jbyteArray, jbyteArray);
+
+/*
+ * Class:     com_kompetensum_keepsafe_NativeCrypto
+ * Method:    AllInOneEncrypt
+ * Signature: ([B[B[BIJ[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AllInOneEncrypt
+  (JNIEnv *, jclass, jbyteArray, jbyteArray, jbyteArray, jint, jlong, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

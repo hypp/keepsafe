@@ -30,7 +30,8 @@ import javax.crypto.NoSuchPaddingException;
 public interface CryptoInterface {
 	
 	// Crypto constants
-	static final int KEY_LENGTH = 256;
+	static final int KEY_LENGTH_BITS = 256;
+	static final int KEY_LENGTH_BYTES = KEY_LENGTH_BITS / 8;
 	static final int IV_LENGTH_BYTES = 128 / 8; 
 	static final int DEFAULT_ITERATION_COUNT = 10000;
 	static final int DEFAULT_SALT_LENGTH = 8;
@@ -40,8 +41,8 @@ public interface CryptoInterface {
 	static final String KEYTYPE = "AES";
 	static final int NONCE_LENGTH = 8 * 3;
 	
-	public byte[] Decrypt(final char[] pw, final byte[] salt, final int iterationCount, final byte[] iv, final byte[] ciphertext) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException;
+	public byte[] Decrypt(final String pw, final byte[] salt, final int iterationCount, final byte[] iv, final byte[] ciphertext) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException;
 
-	public byte[] Encrypt(final char[] pw, final byte[] plaintext, byte[] salt, final int saltLength, final int iterationCount, final long monotonic, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException;
+	public byte[] Encrypt(final String pw, final byte[] plaintext, byte[] salt, final int iterationCount, final long monotonic, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException;
 	
 }

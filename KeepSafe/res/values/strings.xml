@@ -28,4 +28,9 @@
     <string name="selftest">Self test</string>
     <string name="about">About</string>
     
+    <array name="crypto">
+	    <item>Java</item>
+	    <item>Native (PolarSSL)</item>
+    </array>
+    
 </resources>

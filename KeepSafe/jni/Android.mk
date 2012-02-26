@@ -28,4 +28,3 @@ LOCAL_STATIC_LIBRARIES := polarssl
 
 include $(BUILD_SHARED_LIBRARY)
 
-

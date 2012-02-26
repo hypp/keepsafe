@@ -325,13 +325,13 @@ exit:
 }
 
 JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_GenerateRandom
-  (JNIEnv *env, jclass object, jint numBytes)
+  (JNIEnv *env, jclass object, jint num_bytes)
 {
 	int error = ERROR;
 	jbyteArray random = NULL;
 	jbyte* native_random = NULL;
 
-	random = (*env)->NewByteArray(env, numBytes);
+	random = (*env)->NewByteArray(env, num_bytes);
 	if (random == NULL)
 	{
 		goto exit;
@@ -353,7 +353,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_Generate
 		goto exit;
 	}
 
-    res = ctr_drbg_random(&ctr_drbg, native_random, numBytes);
+    res = ctr_drbg_random(&ctr_drbg, native_random, num_bytes);
 	if (res != 0)
 	{
 		goto exit;

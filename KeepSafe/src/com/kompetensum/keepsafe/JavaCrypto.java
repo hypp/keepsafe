@@ -24,8 +24,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -41,13 +39,15 @@ import android.os.SystemClock;
 public class JavaCrypto implements CryptoInterface {
 	
 
-	public byte[] Decrypt(final char[] pw, final byte[] salt, final int iterationCount, final byte[] iv, final byte[] ciphertext) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
+	public byte[] Decrypt(final String pw, final byte[] salt, final int iterationCount, final byte[] iv, final byte[] ciphertext) 
+			throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, 
+			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException
 	{
-		int keyLength = KEY_LENGTH;
+		int keyLength = KEY_LENGTH_BITS;
 		
 		// Generate a secret key from the password	
 		SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(KDF);
-		PBEKeySpec keySpec = new PBEKeySpec(pw, salt, iterationCount, keyLength);
+		PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
 		SecretKey tmp = keyFactory.generateSecret(keySpec);
 		SecretKey key = new SecretKeySpec(tmp.getEncoded(), KEYTYPE);
 		
@@ -59,9 +59,11 @@ public class JavaCrypto implements CryptoInterface {
 		return plaintext;
 	}
 	
-	public byte[] Encrypt(final char[] pw, final byte[] plaintext, byte[] salt, final int saltLength, final int iterationCount, final long monotonic, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException
+	public byte[] Encrypt(final String pw, final byte[] plaintext, byte[] salt, final int iterationCount, 
+			final long monotonic, byte[] iv) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, 
+			InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException
 	{
-		int keyLength = KEY_LENGTH;
+		int keyLength = KEY_LENGTH_BITS;
 		
 		// Generate a random salt
     	SecureRandom prng = SecureRandom.getInstance(CryptoInterface.PRNG);
@@ -69,7 +71,7 @@ public class JavaCrypto implements CryptoInterface {
     	
     	// Generate a secret key from the password	
     	SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(CryptoInterface.KDF);
-    	PBEKeySpec keySpec = new PBEKeySpec(pw, salt, iterationCount, keyLength);
+    	PBEKeySpec keySpec = new PBEKeySpec(pw.toCharArray(), salt, iterationCount, keyLength);
 		SecretKey tmp = keyFactory.generateSecret(keySpec);
 		SecretKey key = new SecretKeySpec(tmp.getEncoded(), CryptoInterface.KEYTYPE);
 		

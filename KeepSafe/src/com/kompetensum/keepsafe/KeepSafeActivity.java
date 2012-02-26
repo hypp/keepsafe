@@ -18,9 +18,6 @@
 
 package com.kompetensum.keepsafe;
 
-import java.security.SecureRandom;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -68,7 +65,6 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 	static final int STATE_FAILED_DECRYPT = 110;
 	static final int STATE_FAILED_STORE = 120;
-	static final int STATE_FAILED_ALGORITHMS = 130;
 	
 	private int state = STATE_INIT;
 	private int iteration_count = CryptoInterface.DEFAULT_ITERATION_COUNT;
@@ -76,7 +72,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	
 	private String ABOUT_URL = "http://code.google.com/p/keepsafe/";
 	
-	private CryptoInterface crypto = new JavaCrypto();
+	private CryptoInterface crypto = new NativeCrypto();
 	
     /** Called when the activity is first created. */
 	/* (non-Javadoc)
@@ -112,20 +108,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
             	SecretStorage ss = new SecretStorage(context);
             	database = ss.getWritableDatabase();
             	setState(STATE_INIT_DB_DONE);
-
-            	// Sanity checks!
-            	try
-            	{
-		        	SecureRandom.getInstance(CryptoInterface.PRNG);
-		        	SecretKeyFactory.getInstance(CryptoInterface.KDF);
-					Cipher.getInstance(CryptoInterface.CIPHER);
-
-	            	setState(STATE_LIST_SECRETS);
-            	} catch (Exception e) {
-            		// PBKDF2WithHmacSHA1 does not exist on SonyEricsson XPERIA X10 Mini API-level 7 
-                	setState(STATE_FAILED_ALGORITHMS);
-            	}
             	
+            	setState(STATE_INIT_DONE);
             }
           }).start();
     }
@@ -140,16 +124,41 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		// Initialize preferences
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		String tmp = preferences.getString("iteration_count", "");
-		iteration_count = Integer.parseInt(tmp);
-		if (iteration_count == 0)
+		try
+		{
+			iteration_count = Integer.parseInt(tmp);
+			if (iteration_count == 0)
+			{
+				iteration_count = CryptoInterface.DEFAULT_ITERATION_COUNT;
+			}
+		}
+		catch (NumberFormatException e)
 		{
 			iteration_count = CryptoInterface.DEFAULT_ITERATION_COUNT;
 		}
-		tmp = preferences.getString("salt_length", "");
-		salt_length = Integer.parseInt(tmp);
-		if (salt_length == 0)
+		
+		try
+		{
+			tmp = preferences.getString("salt_length", "");
+			salt_length = Integer.parseInt(tmp);
+			if (salt_length == 0)
+			{
+				salt_length = CryptoInterface.DEFAULT_SALT_LENGTH;
+			}
+		}
+		catch (NumberFormatException e)
 		{
 			salt_length = CryptoInterface.DEFAULT_SALT_LENGTH;
+		}
+		
+		tmp = preferences.getString("crypto_implementation", "");
+		if (tmp.compareToIgnoreCase("java") == 0)
+		{
+			crypto = new JavaCrypto();
+		}
+		else
+		{
+			crypto = new NativeCrypto();
 		}
 	}
 
@@ -204,6 +213,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				}
 			});
 			break;
+		case STATE_INIT_DONE:
 		case STATE_LIST_SECRETS:
 			// Show list with secrets
 			runOnUiThread(new Runnable() {
@@ -245,20 +255,6 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 			
 			break;
 			
-		case STATE_FAILED_ALGORITHMS:
-			runOnUiThread(new Runnable() {
-				public void run() {
-					AlertDialog ad = new AlertDialog.Builder(context).create();  
-					ad.setCancelable(false); // This blocks the 'BACK' button  
-					ad.setMessage(getString(R.string.notsupported));
-					ad.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.ok), new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							dialog.dismiss();
-						}  
-					});  
-					ad.show();		
-				}
-			});
 		case STATE_FAILED_DECRYPT:
 			// Fall through
 		case STATE_FAILED_STORE:
@@ -364,7 +360,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					byte[] ciphertext = values.getAsByteArray(SecretStorage.COL_VALUE);
 					
 					// Decrypt the secret
-					byte[] plaintext = crypto.Decrypt(pw.toCharArray(), salt, iterationCount, iv, ciphertext);
+					byte[] plaintext = crypto.Decrypt(pw, salt, iterationCount, iv, ciphertext);
 					
 					final String tmpstr = new String(plaintext, "UTF-8");
 					
@@ -413,7 +409,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					byte[] iv = new byte[CryptoInterface.IV_LENGTH_BYTES];
 						
 					// Encrypt the secret
-					byte[] ciphertext = crypto.Encrypt(pw.toCharArray(), plaintext.getBytes("UTF-8"), salt, saltLength, iterationCount, monotonic, iv);
+					byte[] ciphertext = crypto.Encrypt(pw, plaintext.getBytes("UTF-8"), salt, iterationCount, monotonic, iv);
 					
 					// Store it to the database
 					
