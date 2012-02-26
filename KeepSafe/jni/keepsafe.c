@@ -20,6 +20,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_PBKDF2Wi
 	jbyte* native_salt = NULL;
 	jbyte* native_key = NULL;
 
+	if (env == NULL || object == NULL || password == NULL || salt == NULL)
+	{
+		goto exit;
+	}
+
 	jsize pwlen = (*env)->GetArrayLength(env, password);
 	native_password = (*env)->GetByteArrayElements(env, password, NULL);
 	if (native_password == NULL)
@@ -99,6 +104,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AES256CB
 	jbyte* native_key = NULL;
 	unsigned char* iv = NULL;
 	jbyte* native_ciphertext = NULL;
+
+	if (env == NULL || object == NULL || key == NULL || initvec == NULL || plaintext == NULL)
+	{
+		goto exit;
+	}
 
 	jsize klen = (*env)->GetArrayLength(env, key);
 	jsize klenbits = klen * 8;
@@ -210,6 +220,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_AES256CB
 	unsigned char* iv = NULL;
 	jbyte* native_plaintext = NULL;
 	unsigned char* pt = NULL;
+
+	if (env == NULL || object == NULL || key == NULL || initvec == NULL || ciphertext == NULL)
+	{
+		goto exit;
+	}
 
 	jsize clen = (*env)->GetArrayLength(env, ciphertext);
 	native_ciphertext = (*env)->GetByteArrayElements(env, ciphertext, NULL);
@@ -330,6 +345,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_kompetensum_keepsafe_NativeCrypto_Generate
 	int error = ERROR;
 	jbyteArray random = NULL;
 	jbyte* native_random = NULL;
+
+	if (env == NULL || object == NULL)
+	{
+		goto exit;
+	}
 
 	random = (*env)->NewByteArray(env, num_bytes);
 	if (random == NULL)

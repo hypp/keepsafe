@@ -476,7 +476,7 @@ public class SelfTest extends Activity {
 			public void run() {
 				TextView tv = (TextView)findViewById(R.id.selftest);
 				String contents = (String) tv.getText();
-				tv.setText(str + "\r\n" + contents);
+				tv.setText(contents + "\r\n" + str);
 			}
 		});
 		Thread.yield();
