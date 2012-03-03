@@ -6,7 +6,7 @@
 
     <LinearLayout
         android:id="@+id/listsecretsLayout"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
         
@@ -20,7 +20,7 @@
 
         <ListView
             android:id="@+id/listSecrets"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content" >
         </ListView>
 
@@ -28,7 +28,7 @@
 
     <LinearLayout
         android:id="@+id/addsecretLayout"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
@@ -40,7 +40,7 @@
 
         <EditText
             android:id="@+id/secretname"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="text" >
 
@@ -54,7 +54,7 @@
 
         <EditText
             android:id="@+id/secretvalue"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="text" >
 
@@ -68,7 +68,7 @@
 
         <EditText
             android:id="@+id/password"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword" />
         
@@ -83,7 +83,7 @@
 
     <LinearLayout
         android:id="@+id/enterpwLayout"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
 
@@ -103,7 +103,7 @@
 
         <EditText
             android:id="@+id/enterpassword"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword" />
         
@@ -118,7 +118,7 @@
     
     <LinearLayout
         android:id="@+id/showsecretLayout"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical" >
         
@@ -143,8 +143,8 @@
     
     <LinearLayout
         android:id="@+id/failedLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:orientation="vertical" >
 
         <TextView

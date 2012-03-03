@@ -404,7 +404,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 					monotonic++;
 					SharedPreferences.Editor edit = preferences.edit();
 					edit.putLong("monotonic", monotonic);
-					edit.apply();
+					edit.commit();
 	
 					byte[] iv = new byte[CryptoInterface.IV_LENGTH_BYTES];
 						

@@ -128,7 +128,7 @@ public class SelfTest extends Activity {
 				}
 
 	        	SecretKey javakey = null;	        	
-	        	if (salt != null)
+	        	if (salt != null && kf != null)
 	        	{
 					setStatus("Generate key using Java KDF");
 	        		
