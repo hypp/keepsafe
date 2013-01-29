@@ -14,9 +14,12 @@
             android:entries="@array/crypto" 
             android:entryValues="@array/crypto"
             android:defaultValue="Native (PolarSSL)"
-            
             />
-    </PreferenceCategory>
+        <EditTextPreference android:title="Export/import filename"
+            android:key="expimp_filename" 
+            android:defaultValue="keepsafe.export" 
+            android:inputType="text"/>
+        </PreferenceCategory>
     
 
 </PreferenceScreen>

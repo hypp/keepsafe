@@ -72,6 +72,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	private String ABOUT_URL = "http://code.google.com/p/keepsafe/";
 	
 	private CryptoInterface crypto = new NativeCrypto();
+	private String expimp_filename;
+	private long currentRowid;
 	
     /** Called when the activity is first created. */
 	/* (non-Javadoc)
@@ -159,6 +161,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 		{
 			crypto = new NativeCrypto();
 		}
+		
+		expimp_filename = preferences.getString("expimp_filename", "keepsafe.export");
 	}
 
 	/**
@@ -274,6 +278,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	 */
 	protected void refreshSecretList() {
 		ListView list = (ListView)findViewById(R.id.listSecrets);
+		if (list == null) {
+			// To early for this...
+			return;
+		}
+		
 		// Clear the list
 		list.setAdapter(null);
 		
@@ -320,7 +329,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				setState(STATE_DECRYPTING);
 				TextView name = (TextView)findViewById(R.id.name);
 				TextView password = (TextView)findViewById(R.id.enterpassword);
-				retrieveSecret(password.getText().toString(),name.getText().toString());
+				retrieveSecret(password.getText().toString(),currentRowid);
 				password.setText("");
 			}
 			break;
@@ -335,7 +344,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	 * @param pw password
 	 * @param name name of the secret
 	 */
-	private void retrieveSecret(final String pw, final String name) {
+	private void retrieveSecret(final String pw, final long rowid) {
 		// This can take quite a while, we should not run it on the UI thread
 		new Thread(new Runnable() {
 
@@ -343,8 +352,8 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 				
 				try {
 					String[] selection = new String[1];
-					selection[0] = name;
-					Cursor cursor = database.query(SecretStorage.DATABASE_NAME,null,SecretStorage.COL_NAME + " = ?",selection,null, null, null);
+					selection[0] = Long.toString(rowid);
+					Cursor cursor = database.query(SecretStorage.DATABASE_NAME,null,"ROWID = ?",selection,null, null, null);
 					if (!cursor.moveToFirst())
 					{
 						throw new Exception("cursor.moveToFirst() failed");
@@ -439,6 +448,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		
 		Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+		currentRowid = id;
 		String name = cursor.getString(cursor.getColumnIndex(SecretStorage.COL_NAME));
 		TextView tv = (TextView)findViewById(R.id.name);
 		tv.setText(name);
@@ -488,7 +498,7 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	 */
 	@Override
 	public void onBackPressed() {
-		if (state == STATE_LIST_SECRETS)
+		if (state == STATE_LIST_SECRETS || state == STATE_INIT_DONE)
 		{
 			super.onBackPressed();
 		}
@@ -536,20 +546,21 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
         case R.id.exprt:
         {
         	Intent i = new Intent(context, ImpExp.class);
-        	i.putExtra("export", "keepsafe.export");
+        	i.putExtra("export", expimp_filename);
     		startActivity(i);
     		return true;
         }
         case R.id.imprt:
         {
         	Intent i = new Intent(context, ImpExp.class);
-        	i.putExtra("import", "keepsafe.export");
+        	i.putExtra("import", expimp_filename);
     		startActivity(i);
     		return true;
         }
         default:
             return super.onOptionsItemSelected(item);
-    }	}
+	    }	
+	}
 
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onResume()
@@ -558,9 +569,11 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	protected void onResume() {
 		super.onResume();
 		
-		refreshSecretList();
-		
+		// Refresh current state
+		setState(state);
 	}
+	
+	
 	
 }
 
