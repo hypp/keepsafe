@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">keepsafe</string>
+
+    <string name="pleasewait">Vänta</string>
+    <string name="processing">Bearbetar</string>
+    
+    <string name="store">Lagra hemlighet</string>
+    <string name="get">Hämta hemlighet</string>
+    <string name="hide">Göm hemlighet</string>
+    <string name="add">Lägg till hemlighet</string>
+    <string name="delete">Radera</string>
+    
+    <string name="addsecretname">Ange namn</string>
+    <string name="addsecretvalue">Ange hemlighet</string>
+    <string name="enterpassword">Ange lösenord</string>
+    
+    <string name="failed">Misslyckades. Var vänlig starta om.</string>
+    <string name="error">Fel</string>
+    <string name="restart">Starta om</string>
+    <string name="notsupported">De krävda algoritmerna stöds inte av denna enhet.</string>
+    
+    <string name="yes">Ja</string>
+    <string name="no">Nej</string>
+    <string name="ok">OK</string>
+
+    <string name="preferences">Inställningar</string>
+    <string name="selftest">Självtest</string>
+    <string name="about">Om</string>
+    <string name="exprt">Export</string>
+    <string name="imprt">Import</string>
+    
+    <array name="crypto">
+	    <item>Java</item>
+	    <item>Native (PolarSSL)</item>
+    </array>
+    
+</resources>
