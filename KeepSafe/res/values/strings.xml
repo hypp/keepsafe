@@ -17,16 +17,19 @@
     <string name="enterpassword">Enter password</string>
     
     <string name="failed">Failed. Please restart.</string>
+    <string name="error">Error</string>
     <string name="restart">Restart</string>
     <string name="notsupported">The required algorithms are not supported on this device.</string>
     
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
 
     <string name="preferences">Preferences</string>
     <string name="selftest">Self test</string>
     <string name="about">About</string>
+    <string name="exprt">Export</string>
+    <string name="imprt">Import</string>
     
     <array name="crypto">
 	    <item>Java</item>

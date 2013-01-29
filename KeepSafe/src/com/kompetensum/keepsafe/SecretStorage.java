@@ -25,6 +25,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class SecretStorage extends SQLiteOpenHelper {
     
 	public static final String DATABASE_NAME = "secret";
+	public static final String TABLE_NAME = "secret";
 	public static final String COL_NAME = "name";
 	public static final String COL_SALT = "salt";
 	public static final String COL_ITERATION_COUNT = "iterationcount";
@@ -43,7 +44,7 @@ public class SecretStorage extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase database) {
 		// Table to hold secrets 
 		// TODO perhaps add a field for algorithm?
-		final String createsecrettable = "CREATE TABLE secret (" + COL_NAME + " TEXT, " + COL_SALT + " TEXT, " + COL_ITERATION_COUNT + " TEXT, " + COL_IV + " TEXT, " + COL_VALUE + " TEXT);";
+		final String createsecrettable = "CREATE TABLE " + TABLE_NAME + " (" + COL_NAME + " TEXT, " + COL_SALT + " TEXT, " + COL_ITERATION_COUNT + " TEXT, " + COL_IV + " TEXT, " + COL_VALUE + " TEXT);";
 		database.execSQL(createsecrettable);
 
 	}

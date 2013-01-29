@@ -1,6 +1,5 @@
 /*
 
-   Copyright 2012 Mathias Olsson (mathias@kompetensum.com)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -534,9 +533,34 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
 	    		startActivity(i);
 	    		return true;
 	        }
+        case R.id.exprt:
+        {
+        	Intent i = new Intent(context, ImpExp.class);
+        	i.putExtra("export", "keepsafe.export");
+    		startActivity(i);
+    		return true;
+        }
+        case R.id.imprt:
+        {
+        	Intent i = new Intent(context, ImpExp.class);
+        	i.putExtra("import", "keepsafe.export");
+    		startActivity(i);
+    		return true;
+        }
         default:
             return super.onOptionsItemSelected(item);
     }	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		refreshSecretList();
+		
+	}
 	
 }
 
