@@ -57,6 +57,9 @@ public class ImpExp extends Activity {
 	private final int STATE_ALERT_DONE = 5;
 	private int state = STATE_STARTED;
 	
+	public static final String IMPORT = "import";
+	public static final String EXPORT = "export";
+	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
@@ -70,8 +73,8 @@ public class ImpExp extends Activity {
 		progress = ProgressDialog.show(this, getString(R.string.pleasewait), getString(R.string.processing));
 
 		Intent intent = getIntent();
-		imp = intent.getStringExtra("import");
-		exp = intent.getStringExtra("export");
+		imp = intent.getStringExtra(IMPORT);
+		exp = intent.getStringExtra(EXPORT);
 
 		setState(STATE_STARTED);
 		

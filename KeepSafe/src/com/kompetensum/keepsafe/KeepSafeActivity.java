@@ -546,14 +546,14 @@ public class KeepSafeActivity extends Activity implements OnClickListener, OnIte
         case R.id.exprt:
         {
         	Intent i = new Intent(context, ImpExp.class);
-        	i.putExtra("export", expimp_filename);
+        	i.putExtra(ImpExp.EXPORT, expimp_filename);
     		startActivity(i);
     		return true;
         }
         case R.id.imprt:
         {
         	Intent i = new Intent(context, ImpExp.class);
-        	i.putExtra("import", expimp_filename);
+        	i.putExtra(ImpExp.IMPORT, expimp_filename);
     		startActivity(i);
     		return true;
         }
